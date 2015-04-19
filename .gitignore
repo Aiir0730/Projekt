@@ -12,6 +12,7 @@ obj/
 *.pidb
 *.suo
 /*.sln
+*.sln
 *.user
 *.ide
 *.sdf
@@ -26,3 +27,4 @@ OS
 .Trashes
 ehthumbs.db
 Thumbs.db
+*.opensdf
