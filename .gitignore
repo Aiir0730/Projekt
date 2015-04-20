@@ -16,6 +16,9 @@ obj/
 *.user
 *.ide
 *.sdf
+*.tlog
+*.tlog/
+*.idb
 
 ==
 OS
