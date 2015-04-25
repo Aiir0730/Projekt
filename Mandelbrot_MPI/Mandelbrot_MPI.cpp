@@ -1,9 +1,7 @@
 #include <iostream>
 #include <cmath>
 #include <GL/glut.h>
-
-// Funkcaja okreœlaj¹ca, co ma byæ rysowane
-// (zawsze wywo³ywana, gdy trzeba przerysowaæ scenê)
+#include <mpi.h>
 
 float ZAKRES = 7.0f;
 float MIN_X = -7.0F;
@@ -43,11 +41,12 @@ int zbieznosc(double px, double py)
 	return 16;  // 16 zamiast 32, poniewa¿ daje ³adny efekt
 }
 
-void RenderScene(void)   // wspolrzedne przy rysowaniu rozpatrujemy w zakresie x(MIN_X,MAX_X) y(MIN_Y,MAX_Y)
+// Wspó³rzêdne przy rysowaniu rozpatrujemy w zakresie x(MIN_X,MAX_X) y(MIN_Y,MAX_Y)
+void RenderScene(void)
 {
 	double i = MIN_X, j = MIN_Y;
 	glClear(GL_COLOR_BUFFER_BIT);
-	// Czyszczenie okna aktualnym kolorem czyszcz¹cym
+	// Czyszczenie okna aktualnym kolorem czyszcz±cym
 	//glColor3f(0.0f, 1.0f, 0.0f);
 	// Ustawienie aktualnego koloru rysowania na zielony
 	float odcien;
@@ -76,7 +75,7 @@ void RenderScene(void)   // wspolrzedne przy rysowaniu rozpatrujemy w zakresie x
 
 
 	glFlush();
-	// Przekazanie poleceñ rysuj¹cych do wykonania
+	// Przekazanie poleceñ rysuj±cych do wykonania
 }
 
 /*void glutMouseFunc(mouseHandlerLeft, GLUT_LEFT_BUTTON, int state, int x, int y)
@@ -113,17 +112,17 @@ void mouseHandler(int button, int state, int x, int y)   // LPM - przybli¿enie ,
 	RenderScene();
 }
 
-// Funkcja ustalaj¹ca stan renderowania
+// Funkcja ustalaj±ca stan renderowania
 void MyInit(void)
 {
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	// Kolor okna wnêtrza okna - ustawiono na szary
 }
 
-// Funkcja s³u¿¹ca do kontroli zachowania proporcji rysowanych obiektów
+// Funkcja s³u¿±ca do kontroli zachowania proporcji rysowanych obiektów
 // niezale¿nie od rozmiarów okna graficznego
 void ChangeSize(GLsizei horizontal, GLsizei vertical)
-// Parametry horizontal i vertical (szerokoœæ i wysokoœæ okna) s¹
+// Parametry horizontal i vertical (szeroko¶æ i wysoko¶æ okna) s±
 // przekazywane do funkcji za ka¿dym razem, gdy zmieni siê rozmiar okna
 {
 	horiz = horizontal;
@@ -131,28 +130,28 @@ void ChangeSize(GLsizei horizontal, GLsizei vertical)
 
 	GLfloat AspectRatio;
 
-	// Deklaracja zmiennej AspectRatio okreœlaj¹cej proporcjê wymiarów okna
+	// Deklaracja zmiennej AspectRatio okre¶laj±cej proporcjê wymiarów okna
 	if (vertical == 0)
 		// Zabezpieczenie pzred dzieleniem przez 0
 		vertical = 1;
 
 	glViewport(0, 0, horizontal, vertical);
-	// Ustawienie wielkoœciokna okna urz¹dzenia (Viewport)
+	// Ustawienie wielko¶ciokna okna urz±dzenia (Viewport)
 	// W tym przypadku od (0,0) do (horizontal, vertical)
 
 	glMatrixMode(GL_PROJECTION);
-	// Okreœlenie uk³adu wspó³rzêdnych obserwatora
+	// Okre¶lenie uk³adu wspó³rzêdnych obserwatora
 
 	glLoadIdentity();
-	// Okreœlenie przestrzeni ograniczaj¹cej
+	// Okre¶lenie przestrzeni ograniczaj±cej
 
 	AspectRatio = (GLfloat)horizontal / (GLfloat)vertical;
 	// Wyznaczenie wspó³czynnika proporcji okna
 
 	// Gdy okno na ekranie nie jest kwadratem wymagane jest
-	// okreœlenie okna obserwatora.
-	// Pozwala to zachowaæ w³aœciwe proporcje rysowanego obiektu
-	// Do okreœlenia okna obserwatora s³u¿y funkcja glOrtho(...)
+	// okre¶lenie okna obserwatora.
+	// Pozwala to zachowaæ w³a¶ciwe proporcje rysowanego obiektu
+	// Do okre¶lenia okna obserwatora s³u¿y funkcja glOrtho(...)
 
 	if (horizontal >= vertical)
 		glOrtho(MIN_X, MAX_X, MIN_Y / AspectRatio, MAX_Y / AspectRatio, 1.0, -1.0);
@@ -160,37 +159,37 @@ void ChangeSize(GLsizei horizontal, GLsizei vertical)
 		glOrtho(MIN_X*AspectRatio, MAX_X*AspectRatio, MIN_Y, MAX_Y, 1.0, -1.0);
 
 	glMatrixMode(GL_MODELVIEW);
-	// Okreœlenie uk³adu wspó³rzêdnych
+	// Okre¶lenie uk³adu wspó³rzêdnych
 
 	glLoadIdentity();
 }
 
-// G³ówny punkt wejœcia programu. Program dzia³a w trybie konsoli
+// G³ówny punkt wej¶cia programu. Program dzia³a w trybie konsoli
 int main(int argc, char *argv[])
 {
 	glutInit(&argc, argv);
+	MPI_Init(&argc, &argv);
 	std::cout << "Sterowanie:\n\tLPM - zblizenie\n\tPPM - oddalenie\n";
 
 	glutInitDisplayMode(GLUT_SINGLE | GLUT_RGBA);
-	// Ustawienie trybu wyœwietlania
-	// GLUT_SINGLE - pojedynczy bufor wyœwietlania
+	// Ustawienie trybu wy¶wietlania
+	// GLUT_SINGLE - pojedynczy bufor wy¶wietlania
 	// GLUT_RGBA - model kolorów RGB
 
 	glutCreateWindow("Zbior Mandelbrota w openGL");
-	// Utworzenie okna i okreœlenie treœci napisu w nag³ówku okna
+	// Utworzenie okna i okre¶lenie tre¶ci napisu w nag³ówku okna
 
 	glutDisplayFunc(RenderScene);
-	// Okreœlenie, ¿e funkcja RenderScene bêdzie funkcj¹ zwrotn¹ (callback)
-	// Biblioteka GLUT bêdzie wywo³ywa³a t¹ funkcjê za ka¿dym razem, gdy
+	// Okre¶lenie, ¿e funkcja RenderScene bêdzie funkcj± zwrotn± (callback)
+	// Biblioteka GLUT bêdzie wywo³ywa³a t± funkcjê za ka¿dym razem, gdy
 	// trzeba bêdzie przerysowaæ okno
 
 	glutReshapeFunc(ChangeSize);
-	// Dla aktualnego okna ustala funkcjê zwrotn¹ odpowiedzialn¹ za
-	// zmiany rozmiaru okna
+	// Dla aktualnego okna ustala funkcjê zwrotn± odpowiedzialn± za zmiany rozmiaru okna
 
 	MyInit();
 	// Funkcja MyInit (zdefiniowana powy¿ej) wykonuje wszelkie
-	// inicjalizacje konieczneprzed przyst¹pieniem do renderowania
+	// inicjalizacje konieczne przed przyst±pieniem do renderowania
 
 	glutMouseFunc(mouseHandler);
 	glutMainLoop();
