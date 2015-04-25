@@ -1,8 +1,6 @@
 #include <iostream>
-#include <windows.h>
 #include <cmath>
-#include <gl/gl.h>
-#include <gl/glut.h>
+#include <GL/glut.h>
 
 // Funkcaja okreœlaj¹ca, co ma byæ rysowane
 // (zawsze wywo³ywana, gdy trzeba przerysowaæ scenê)
@@ -86,7 +84,7 @@ void RenderScene(void)   // wspolrzedne przy rysowaniu rozpatrujemy w zakresie x
 
 }*/
 
-void mouseHandler(int button, int state, int x, int y)   // LPM - przybli¿enie , PPM - oddalenie 
+void mouseHandler(int button, int state, int x, int y)   // LPM - przybli¿enie , PPM - oddalenie
 {
 	if (state != GLUT_UP) return;
 	if (button == GLUT_LEFT_BUTTON)
@@ -162,14 +160,15 @@ void ChangeSize(GLsizei horizontal, GLsizei vertical)
 		glOrtho(MIN_X*AspectRatio, MAX_X*AspectRatio, MIN_Y, MAX_Y, 1.0, -1.0);
 
 	glMatrixMode(GL_MODELVIEW);
-	// Okreœlenie uk³adu wspó³rzêdnych    
+	// Okreœlenie uk³adu wspó³rzêdnych
 
 	glLoadIdentity();
 }
 
 // G³ówny punkt wejœcia programu. Program dzia³a w trybie konsoli
-void main(void)
+int main(int argc, char *argv[])
 {
+	glutInit(&argc, argv);
 	std::cout << "Sterowanie:\n\tLPM - zblizenie\n\tPPM - oddalenie\n";
 
 	glutInitDisplayMode(GLUT_SINGLE | GLUT_RGBA);
@@ -190,10 +189,12 @@ void main(void)
 	// zmiany rozmiaru okna
 
 	MyInit();
-	// Funkcja MyInit (zdefiniowana powy¿ej) wykonuje wszelkie 
+	// Funkcja MyInit (zdefiniowana powy¿ej) wykonuje wszelkie
 	// inicjalizacje konieczneprzed przyst¹pieniem do renderowania
 
 	glutMouseFunc(mouseHandler);
 	glutMainLoop();
 	// Funkcja uruchamia szkielet biblioteki GLUT
+
+	return 0;
 }
