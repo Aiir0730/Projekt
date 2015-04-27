@@ -38,15 +38,20 @@ struct slaveToMaster
 	unsigned char* colorB;
 } packageSlave2Master;
 
+//funkcja licz¹ca normê wektora [x, y]
 float magnitude(double x, double y);
+
+//funkcja licz¹ca odcieñ piksela (px,py), depth - liczba wyrazów ci¹gu branych pod uwagê przy sprawdzaniu zbie¿noœci	
 int convergence(double px, double py, int depth);
+
+
 void renderScene(double x, double y, int depth);	// Wspó³rzêdne przy rysowaniu rozpatrujemy w zakresie x(MIN_X,MAX_X) y(MIN_Y,MAX_Y)
 
 // G³ówny punkt wej¶cia programu. Program dzia³a w trybie konsoli
 int main(int argc, char *argv[])	// argv: depth, taskPerThread, x, y, colorR, colorG, colorB
 {
-
-	if (argc != 8) return -1;
+	// parametry generowanego fraktala zostan¹ przekazane przez kolejne argumenty wywo³ania
+	if (argc != 8) return -1; 
 	packageMaster2Slave.jobID = 0;
 	packageMaster2Slave.depth = atoi(argv[1]);
 	int taskPerThread = atoi(argv[2]);
@@ -57,24 +62,32 @@ int main(int argc, char *argv[])	// argv: depth, taskPerThread, x, y, colorR, co
 	packageMaster2Slave.colorR = (unsigned char)atoi(argv[5]);
 	packageMaster2Slave.colorG = (unsigned char)atoi(argv[6]);
 	packageMaster2Slave.colorB = (unsigned char)atoi(argv[7]);
+	
+	
 	int memberSize, msgSize, worldSize, worldRank, sumSize = 0, position = 0;
-	int tasks = (worldSize - 1) * taskPerThread;
+	int tasks = (worldSize - 1) * taskPerThread; // na ile podzadañ zostanie rozbite zadanie g³ówne
 	char* buff;
+	MPI_Status status;
 	
 	MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &worldSize);
     MPI_Comm_rank(MPI_COMM_WORLD, &worldRank);
 	
-	MPI_Status status;
+	
 		
 	if (worldRank == 0)
 	{	
-		MPI_Pack_size(5, MPI_INT, MPI_COMM_WORLD, &memberSize);
+		//------------------
+		//----  okreœlenie potrzebnego rozmiaru bufora na komunikat master2Slave
+		MPI_Pack_size(5, MPI_INT, MPI_COMM_WORLD, &memberSize); 
 		sumSize += memberSize; // master
 		MPI_Pack_size(3, MPI_CHAR, MPI_COMM_WORLD, &memberSize);
 		sumSize += memberSize;
 		buff = (char*)malloc(sumSize);
-		
+				
+		//---------------------
+		//----  przydzielenie po jednym zadaniu ka¿demu slave
+		//---------------------
 		for (int i = 0; i < worldSize - 1; i++)
 		{
 			MPI_Pack(&packageMaster2Slave.jobID, 1, MPI_INT, buff, sumSize, &position, MPI_COMM_WORLD);
@@ -89,7 +102,9 @@ int main(int argc, char *argv[])	// argv: depth, taskPerThread, x, y, colorR, co
 			MPI_Send(buff, position, MPI_PACKED, i + 1, WORKTAG, MPI_COMM_WORLD);
 			--tasks;
 		}
-		
+		//---------------------
+		//----  odbieranie rezultatów kolejnych podzadañ i przydzielanie podzadañ wolnym slave'om
+		//---------------------
 		while(tasks > 0)
 		{
 			MPI_Recv(buff, sumSize, MPI_PACKED, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
@@ -108,14 +123,30 @@ int main(int argc, char *argv[])	// argv: depth, taskPerThread, x, y, colorR, co
 			MPI_Pack(&packageMaster2Slave.colorB, 1, MPI_UNSIGNED_CHAR, buff, sumSize, &position, MPI_COMM_WORLD);
 		
 			MPI_Send(buff, position, MPI_PACKED, status.MPI_SOURCE, WORKTAG, MPI_COMM_WORLD);
+			
+			//
+			//	przetwarzanie odebranenych rezultatów, wstawienie do tablicy bitmapy w odpowiednim miejscu
+			//
+			
 			--tasks;
 		}
 		
+		
+		//-------------
+		//----  oczekiwanie na zakoñczenie ostatnich podzadañ, po rozdaniu wszystkich podzadañ z puli, 
 		for (int rank = 1; rank < worldSize; rank++)
 		{
 			//recv od slave'ów
+			
+			//
+			//	przetwarzanie odebranenych rezultatów, wstawienie do tablicy bitmapy w odpowiednim miejscu
+			//
+			
 		}
 		
+		//--------------
+		//----  wyslanie zadania zakonczenia pracy slave'om
+		//--------------
 		for (int rank = 1; rank < worldSize; rank++)
 		{
 			MPI_Send(0, 0, MPI_PACKED, rank, DIETAG, MPI_COMM_WORLD);
@@ -123,6 +154,17 @@ int main(int argc, char *argv[])	// argv: depth, taskPerThread, x, y, colorR, co
 	}
 	else
 	{		
+		for (;;)
+		{
+			// MPI_Recv
+			// if TAG == DIETAG -> return
+			// MPI_UNPACK
+			// for pixels to calculate -> calculate
+			// MPI_PACK reponse
+			// MPI_Send to master
+			
+		}
+		// temporary rubbish, MPI_Unpack jest ok
 		buff = (char*)malloc(sizeof(packageMaster2Slave));
 		sumSize = sizeof(packageMaster2Slave);
 		MPI_Recv(buff, sumSize, MPI_PACKED, 0, 23, MPI_COMM_WORLD, &status);
