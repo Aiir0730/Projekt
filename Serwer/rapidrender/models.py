@@ -19,5 +19,6 @@ class Task(models.Model):
 
   status = models.CharField(max_length=128)
 
+  @property
   def make_rgb(self):
-    return "0x%x%x%x" % (colorR, colorG, colorB)
+    return "0x%x%x%x" % (self.colorR, self.colorG, self.colorB)
