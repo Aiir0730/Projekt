@@ -18,3 +18,6 @@ class Task(models.Model):
   finish_time = models.DateTimeField()
 
   status = models.CharField(max_length=128)
+
+  def make_rgb(self):
+    return "0x%x%x%x" % (colorR, colorG, colorB)
