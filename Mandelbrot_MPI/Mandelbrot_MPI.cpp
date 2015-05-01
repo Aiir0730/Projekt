@@ -38,18 +38,18 @@ struct slaveToMaster
 	unsigned char* colorB;
 } packageSlave2Master;
 
-//funkcja licz¹ca normê wektora [x, y]
+//funkcja liczÂ¹ca normÃª wektora [x, y]
 float magnitude(double x, double y);
 
-//funkcja licz¹ca odcieñ piksela (px,py), depth - liczba wyrazów ci¹gu branych pod uwagê przy sprawdzaniu zbie¿noœci
+//funkcja liczÂ¹ca odcieÃ± piksela (px,py), depth - liczba wyrazÃ³w ciÂ¹gu branych pod uwagÃª przy sprawdzaniu zbieÂ¿noÅ“ci
 int convergence(double px, double py, int depth);
 
-void renderScene(double x, double y, int depth);	// Wspó³rzêdne przy rysowaniu rozpatrujemy w zakresie x(MIN_X,MAX_X) y(MIN_Y,MAX_Y)
+void renderScene(double x, double y, int depth);	// WspÃ³Â³rzÃªdne przy rysowaniu rozpatrujemy w zakresie x(MIN_X,MAX_X) y(MIN_Y,MAX_Y)
 
-// G³ówny punkt wej¶cia programu. Program dzia³a w trybie konsoli
+// GÂ³Ã³wny punkt wejÂ¶cia programu. Program dziaÂ³a w trybie konsoli
 int main(int argc, char *argv[])	// argv: depth, taskPerThread, x, y, colorR, colorG, colorB
 {
-	// parametry generowanego fraktala zostan¹ przekazane przez kolejne argumenty wywo³ania
+	// parametry generowanego fraktala zostanÂ¹ przekazane przez kolejne argumenty wywoÂ³ania
 	if (argc != 8) return -1;
 	packageMaster2Slave.jobID = 0;
 	packageMaster2Slave.depth = atoi(argv[1]);
@@ -67,9 +67,10 @@ int main(int argc, char *argv[])	// argv: depth, taskPerThread, x, y, colorR, co
 	int slave2MasterSize = 0;
 	int position = 0;
 
-	int tasks = (worldSize - 1) * taskPerThread; // na ile podzadañ zostanie rozbite zadanie g³ówne
+	int tasks = (worldSize - 1) * taskPerThread; // na ile podzadaÃ± zostanie rozbite zadanie gÂ³Ã³wne
+	if (tasks > y0) tasks = y0; // Zabezpieczenie przed zbyt duÅ¼Ä… liczbÄ… zadaÅ„
 
-	int rowNo = 0; // numery wierszy obecnie rozpatrywanych, przy podziale na taski, licz¹c od góry
+	int rowNo = 0; // numery wierszy obecnie rozpatrywanych, przy podziale na taski, liczÂ¹c od gÃ³ry
 	int numberOfRowsPerTask = y0 / tasks;
 	int sizeOfLastTask;
 	int slaveWithLastTask;
@@ -93,7 +94,7 @@ int main(int argc, char *argv[])	// argv: depth, taskPerThread, x, y, colorR, co
 	if (worldRank == 0)
 	{
 		//------------------
-		//----  okreœlenie potrzebnego rozmiaru bufora na komunikat master2Slave
+		//----  okreÅ“lenie potrzebnego rozmiaru bufora na komunikat master2Slave
 		MPI_Pack_size(5, MPI_INT, MPI_COMM_WORLD, &memberSize);
 		master2SlaveSize += memberSize; // master
 		MPI_Pack_size(3, MPI_CHAR, MPI_COMM_WORLD, &memberSize);
@@ -101,7 +102,7 @@ int main(int argc, char *argv[])	// argv: depth, taskPerThread, x, y, colorR, co
 		buffSend = (char*)malloc(master2SlaveSize);
 
 		//------------------
-		//----  okreœlenie potrzebnego rozmiaru bufora na komunikat slave2Master - bêdzie trzeba zrobiæ to jeszcze raz dla ostatniego taska (mo¿liwy inny rozmiar)
+		//----  okreÅ“lenie potrzebnego rozmiaru bufora na komunikat slave2Master - bÃªdzie trzeba zrobiÃ¦ to jeszcze raz dla ostatniego taska (moÂ¿liwy inny rozmiar)
 		MPI_Pack_size(3, MPI_INT, MPI_COMM_WORLD, &memberSize);
 		slave2MasterSize += memberSize; // master
 		MPI_Pack_size(3 * numOfPixels, MPI_CHAR, MPI_COMM_WORLD, &memberSize);
@@ -109,10 +110,10 @@ int main(int argc, char *argv[])	// argv: depth, taskPerThread, x, y, colorR, co
 		buffRecv = (char*)malloc(slave2MasterSize);
 
 		//---------------------
-		//----  przydzielenie po jednym zadaniu ka¿demu slave
+		//----  przydzielenie po jednym zadaniu kaÂ¿demu slave
 		//---------------------
 		int i = 0; // bedziemy tez traktowac jako jobID
-		for (; i < worldSize - 1; i++)
+		for (i; i < worldSize - 1; i++)
 		{
 			packageMaster2Slave.jobID = i;
 			packageMaster2Slave.ymin = rowNo;
@@ -132,12 +133,13 @@ int main(int argc, char *argv[])	// argv: depth, taskPerThread, x, y, colorR, co
 			MPI_Send(buffSend, position, MPI_PACKED, i + 1, WORKTAG, MPI_COMM_WORLD);
 			--tasks;
 		}
+
 		//---------------------
-		//----  odbieranie rezultatów kolejnych podzadañ i przydzielanie podzadañ wolnym slave'om
+		//----  odbieranie rezultatÃ³w kolejnych podzadaÃ± i przydzielanie podzadaÃ± wolnym slave'om
 		//---------------------
 		while(tasks > 0)
 		{
-			//recv od slave'ów
+			//recv od slave'Ã³w
 
 			MPI_Recv(buffRecv, sumSize, MPI_PACKED, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
 			position = 0;
@@ -150,13 +152,13 @@ int main(int argc, char *argv[])	// argv: depth, taskPerThread, x, y, colorR, co
 			MPI_Unpack(buffRecv, slave2MasterSize, &position, &packageSlave2Master.colorG, numOfPixels, MPI_UNSIGNED_CHAR, MPI_COMM_WORLD);
 			MPI_Unpack(buffRecv, slave2MasterSize, &position, &packageSlave2Master.colorB, numOfPixels, MPI_UNSIGNED_CHAR, MPI_COMM_WORLD);
 
-			//ustalenie nastêpnego taska
+			//ustalenie nastÃªpnego taska
 			position = 0;
 			packageMaster2Slave.jobID = i;
 			packageMaster2Slave.ymin = rowNo;
 
-            // w wyliczaniu numberOfRowsPerTask zaokr¹glamy w dól, wiêc bêdziemy przetwarzaæ mniej wierszy ni¿ powinniœmy
-			// zatem przy ostatnim tasku niech policzy wszystkie pozosta³e
+            // w wyliczaniu numberOfRowsPerTask zaokrÂ¹glamy w dÃ³l, wiÃªc bÃªdziemy przetwarzaÃ¦ mniej wierszy niÂ¿ powinniÅ“my
+			// zatem przy ostatnim tasku niech policzy wszystkie pozostaÂ³e
 			if (tasks == 1)
 			{
 				packageMaster2Slave.ymax = y0;
@@ -166,7 +168,7 @@ int main(int argc, char *argv[])	// argv: depth, taskPerThread, x, y, colorR, co
 			else
 				packageMaster2Slave.ymax = rowNo + numberOfRowsPerTask;
 			rowNo += numberOfRowsPerTask;
-			//wys³anie nastêpnego taska
+			//wysÂ³anie nastÃªpnego taska
 			MPI_Pack(&packageMaster2Slave.jobID, 1, MPI_INT, buff, sumSize, &position, MPI_COMM_WORLD);
 			MPI_Pack(&packageMaster2Slave.x, 1, MPI_INT, buff, sumSize, &position, MPI_COMM_WORLD);
 			MPI_Pack(&packageMaster2Slave.ymin, 1, MPI_INT, buff, sumSize, &position, MPI_COMM_WORLD);
@@ -179,7 +181,7 @@ int main(int argc, char *argv[])	// argv: depth, taskPerThread, x, y, colorR, co
 			MPI_Send(buff, position, MPI_PACKED, status.MPI_SOURCE, WORKTAG, MPI_COMM_WORLD);
 
 			//
-			//	przetwarzanie odebranenych rezultatów, wstawienie do tablicy bitmapy w odpowiednim miejscu
+			//	przetwarzanie odebranenych rezultatÃ³w, wstawienie do tablicy bitmapy w odpowiednim miejscu
 			//
 
 			--tasks;
@@ -187,7 +189,7 @@ int main(int argc, char *argv[])	// argv: depth, taskPerThread, x, y, colorR, co
 		}
 
 		//-------------
-		//----  oczekiwanie na zakoñczenie ostatnich podzadañ, po rozdaniu wszystkich podzadañ z puli,
+		//----  oczekiwanie na zakoÃ±czenie ostatnich podzadaÃ±, po rozdaniu wszystkich podzadaÃ± z puli,
 		for (int rank = 1; rank <= worldSize; rank++)
 		{
 			if (rank == slaveWithLastTask)
@@ -196,7 +198,7 @@ int main(int argc, char *argv[])	// argv: depth, taskPerThread, x, y, colorR, co
 			}
 			else
 			{
-				//recv od slave'ów
+				//recv od slave'Ã³w
 				MPI_Recv(buffRecv, slave2MasterSize, MPI_PACKED, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
 				position = 0;
 				MPI_Get_count(&status, MPI_PACKED, &msgSize);
@@ -209,12 +211,12 @@ int main(int argc, char *argv[])	// argv: depth, taskPerThread, x, y, colorR, co
 				MPI_Unpack(buffRecv, slave2MasterSize, &position, &packageSlave2Master.colorB, numOfPixels, MPI_UNSIGNED_CHAR, MPI_COMM_WORLD);
 			}
 			//
-			//	przetwarzanie odebranenych rezultatów, wstawienie do tablicy bitmapy w odpowiednim miejscu
+			//	przetwarzanie odebranenych rezultatÃ³w, wstawienie do tablicy bitmapy w odpowiednim miejscu
 			//
 		}
 
 		//--------------
-		//----  wyslanie ¿adania zakonczenia pracy slave'om
+		//----  wyslanie Â¿adania zakonczenia pracy slave'om
 		//--------------
 		for (int rank = 1; rank < worldSize; rank++)
 		{
@@ -224,7 +226,7 @@ int main(int argc, char *argv[])	// argv: depth, taskPerThread, x, y, colorR, co
 	else
 	{
 		//------------------
-		//----  okreœlenie potrzebnego rozmiaru bufora na komunikat master2Slave
+		//----  okreÅ“lenie potrzebnego rozmiaru bufora na komunikat master2Slave
 		MPI_Pack_size(5, MPI_INT, MPI_COMM_WORLD, &memberSize);
 		master2SlaveSize += memberSize; // master
 		MPI_Pack_size(3, MPI_CHAR, MPI_COMM_WORLD, &memberSize);
@@ -232,7 +234,7 @@ int main(int argc, char *argv[])	// argv: depth, taskPerThread, x, y, colorR, co
 		buffRecv = (char*)malloc(master2SlaveSize);
 
 		//------------------
-		//----  okreœlenie potrzebnego rozmiaru bufora na komunikat slave2Master - bêdzie trzeba zrobiæ to jeszcze raz dla ostatniego taska (mo¿liwy inny rozmiar)
+		//----  okreÅ“lenie potrzebnego rozmiaru bufora na komunikat slave2Master - bÃªdzie trzeba zrobiÃ¦ to jeszcze raz dla ostatniego taska (moÂ¿liwy inny rozmiar)
 		MPI_Pack_size(3, MPI_INT, MPI_COMM_WORLD, &memberSize);
 		master2SlaveSize += memberSize; // master
 		MPI_Pack_size(3*numOfPixels, MPI_CHAR, MPI_COMM_WORLD, &memberSize);
