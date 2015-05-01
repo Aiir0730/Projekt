@@ -18,9 +18,15 @@ int main(int argc, char *argv[])
     char processorName[MPI_MAX_PROCESSOR_NAME];
     int nameLen;
     MPI_Get_processor_name(processorName, &nameLen);
+	
+    if (worldRank == 0)
+    std::cout << "Master -  " << processorName
+    		<< ", rank:" << worldRank << " worldSize " << worldSize << " procesorów\n";
 
-    std::cout << "Ziomalków z najlepszej grupy na świecie wita procesor " << processorName
-    		<< ", o randze " << worldRank << " spośród " << worldSize << " procesorów\n";
+    else
+    std::cout << "Slave -  " << processorName
+                << ", rank:" << worldRank << " worldSize " << worldSize << " procesorów\n";
+
 
     // Kończenie środowiska MPI. Nie wiem jeszcze, co dokładnie robi,
     // ale nie jest to najistotniejsza w tej chwili kwestia.
