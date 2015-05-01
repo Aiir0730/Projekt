@@ -41,9 +41,8 @@ struct slaveToMaster
 //funkcja licz¹ca normê wektora [x, y]
 float magnitude(double x, double y);
 
-//funkcja licz¹ca odcieñ piksela (px,py), depth - liczba wyrazów ci¹gu branych pod uwagê przy sprawdzaniu zbie¿noœci	
+//funkcja licz¹ca odcieñ piksela (px,py), depth - liczba wyrazów ci¹gu branych pod uwagê przy sprawdzaniu zbie¿noœci
 int convergence(double px, double py, int depth);
-
 
 void renderScene(double x, double y, int depth);	// Wspó³rzêdne przy rysowaniu rozpatrujemy w zakresie x(MIN_X,MAX_X) y(MIN_Y,MAX_Y)
 
@@ -51,7 +50,7 @@ void renderScene(double x, double y, int depth);	// Wspó³rzêdne przy rysowaniu r
 int main(int argc, char *argv[])	// argv: depth, taskPerThread, x, y, colorR, colorG, colorB
 {
 	// parametry generowanego fraktala zostan¹ przekazane przez kolejne argumenty wywo³ania
-	if (argc != 8) return -1; 
+	if (argc != 8) return -1;
 	packageMaster2Slave.jobID = 0;
 	packageMaster2Slave.depth = atoi(argv[1]);
 	int taskPerThread = atoi(argv[2]);
@@ -62,56 +61,53 @@ int main(int argc, char *argv[])	// argv: depth, taskPerThread, x, y, colorR, co
 	packageMaster2Slave.colorR = (unsigned char)atoi(argv[5]);
 	packageMaster2Slave.colorG = (unsigned char)atoi(argv[6]);
 	packageMaster2Slave.colorB = (unsigned char)atoi(argv[7]);
-	
-	
+
 	int memberSize, msgSize, worldSize, worldRank;
 	int master2SlaveSize = 0;
 	int slave2MasterSize = 0;
 	int position = 0;
-	
+
 	int tasks = (worldSize - 1) * taskPerThread; // na ile podzadañ zostanie rozbite zadanie g³ówne
-	
+
 	int rowNo = 0; // numery wierszy obecnie rozpatrywanych, przy podziale na taski, licz¹c od góry
-	int numberOfRowsPerTask = y0/tasks;
+	int numberOfRowsPerTask = y0 / tasks;
 	int sizeOfLastTask;
 	int slaveWithLastTask;
-	
+
 	char* buffSend;
 	char* buffRecv;
 	MPI_Status status;
-	
-	int numOfPixels = numberOfRowsPerTask*packageMaster2Slave.x;
-	
-	buffRecv = (char*)malloc (sumSize)); // 
-			
-	
+
+	int numOfPixels = numberOfRowsPerTask * packageMaster2Slave.x;
+
+	buffRecv = (char*)malloc (sumSize)); //
+
 	MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &worldSize);
     MPI_Comm_rank(MPI_COMM_WORLD, &worldRank);
-	
+
 	char* packageSlave2Master.colorR = (char*)malloc(numOfPixels*sizeof(char));
 	char* packageSlave2Master.colorG = (char*)malloc(numOfPixels*sizeof(char));
 	char* packageSlave2Master.colorB = (char*)malloc(numOfPixels*sizeof(char));
-			
-		
+
 	if (worldRank == 0)
-	{	
+	{
 		//------------------
 		//----  okreœlenie potrzebnego rozmiaru bufora na komunikat master2Slave
-		MPI_Pack_size(5, MPI_INT, MPI_COMM_WORLD, &memberSize); 
+		MPI_Pack_size(5, MPI_INT, MPI_COMM_WORLD, &memberSize);
 		master2SlaveSize += memberSize; // master
 		MPI_Pack_size(3, MPI_CHAR, MPI_COMM_WORLD, &memberSize);
 		master2SlaveSize += memberSize;
 		buffSend = (char*)malloc(master2SlaveSize);
-		
+
 		//------------------
 		//----  okreœlenie potrzebnego rozmiaru bufora na komunikat slave2Master - bêdzie trzeba zrobiæ to jeszcze raz dla ostatniego taska (mo¿liwy inny rozmiar)
-		MPI_Pack_size(3, MPI_INT, MPI_COMM_WORLD, &memberSize); 
-		master2SlaveSize += memberSize; // master
-		MPI_Pack_size(3*numOfPixels, MPI_CHAR, MPI_COMM_WORLD, &memberSize);
-		master2SlaveSize += memberSize;
+		MPI_Pack_size(3, MPI_INT, MPI_COMM_WORLD, &memberSize);
+		slave2MasterSize += memberSize; // master
+		MPI_Pack_size(3 * numOfPixels, MPI_CHAR, MPI_COMM_WORLD, &memberSize);
+		slave2MasterSize += memberSize;
 		buffRecv = (char*)malloc(slave2MasterSize);
-		
+
 		//---------------------
 		//----  przydzielenie po jednym zadaniu ka¿demu slave
 		//---------------------
@@ -121,7 +117,7 @@ int main(int argc, char *argv[])	// argv: depth, taskPerThread, x, y, colorR, co
 			packageMaster2Slave.jobID = i;
 			packageMaster2Slave.ymin = rowNo;
 			packageMaster2Slave.ymax = rowNo + numberOfRowsPerTask;
-			
+
 			rowNo += numberOfRowsPerTask;
 			position = 0;
 			MPI_Pack(&packageMaster2Slave.jobID, 1, MPI_INT, buffSend, master2SlaveSize, &position, MPI_COMM_WORLD);
@@ -132,7 +128,7 @@ int main(int argc, char *argv[])	// argv: depth, taskPerThread, x, y, colorR, co
 			MPI_Pack(&packageMaster2Slave.colorR, 1, MPI_UNSIGNED_CHAR, master2SlaveSize, sumSize, &position, MPI_COMM_WORLD);
 			MPI_Pack(&packageMaster2Slave.colorG, 1, MPI_UNSIGNED_CHAR, master2SlaveSize, sumSize, &position, MPI_COMM_WORLD);
 			MPI_Pack(&packageMaster2Slave.colorB, 1, MPI_UNSIGNED_CHAR, master2SlaveSize, sumSize, &position, MPI_COMM_WORLD);
-		
+
 			MPI_Send(buffSend, position, MPI_PACKED, i + 1, WORKTAG, MPI_COMM_WORLD);
 			--tasks;
 		}
@@ -141,30 +137,27 @@ int main(int argc, char *argv[])	// argv: depth, taskPerThread, x, y, colorR, co
 		//---------------------
 		while(tasks > 0)
 		{
-			
-				
-			
 			//recv od slave'ów
-			
+
 			MPI_Recv(buffRecv, sumSize, MPI_PACKED, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
 			position = 0;
 			MPI_Get_count(&status, MPI_PACKED, &msgSize);
-			
-			
+
 			MPI_Unpack(buffRecv, slave2MasterSize, &position, &packageSlave2Master.jobID, 1, MPI_INT, MPI_COMM_WORLD);
 			MPI_Unpack(buffRecv, slave2MasterSize, &position, &packageSlave2Master.ymin, 1, MPI_INT, MPI_COMM_WORLD);
 			MPI_Unpack(buffRecv, slave2MasterSize, &position, &packageSlave2Master.ymax, 1, MPI_INT, MPI_COMM_WORLD);
 			MPI_Unpack(buffRecv, slave2MasterSize, &position, &packageSlave2Master.colorR, numOfPixels, MPI_UNSIGNED_CHAR, MPI_COMM_WORLD);
 			MPI_Unpack(buffRecv, slave2MasterSize, &position, &packageSlave2Master.colorG, numOfPixels, MPI_UNSIGNED_CHAR, MPI_COMM_WORLD);
 			MPI_Unpack(buffRecv, slave2MasterSize, &position, &packageSlave2Master.colorB, numOfPixels, MPI_UNSIGNED_CHAR, MPI_COMM_WORLD);
-			
 
 			//ustalenie nastêpnego taska
 			position = 0;
 			packageMaster2Slave.jobID = i;
 			packageMaster2Slave.ymin = rowNo;
-			if (tasks == 1) // w wyliczaniu numberOfRowsPerTask zaokr¹glamy w dól, wiêc bêdziemy przetwarzaæ mniej wierszy ni¿ powinniœmy
-							// zatem przy ostatnim tasku niech policzy wszystkie pozosta³e
+
+            // w wyliczaniu numberOfRowsPerTask zaokr¹glamy w dól, wiêc bêdziemy przetwarzaæ mniej wierszy ni¿ powinniœmy
+			// zatem przy ostatnim tasku niech policzy wszystkie pozosta³e
+			if (tasks == 1)
 			{
 				packageMaster2Slave.ymax = y0;
 				sizeOfLastTask = y0 - rowNo; // bedzie potrzebne by zaalokowac odpowiednio duzo bufora przy MPI_Recv
@@ -182,26 +175,24 @@ int main(int argc, char *argv[])	// argv: depth, taskPerThread, x, y, colorR, co
 			MPI_Pack(&packageMaster2Slave.colorR, 1, MPI_UNSIGNED_CHAR, buff, sumSize, &position, MPI_COMM_WORLD);
 			MPI_Pack(&packageMaster2Slave.colorG, 1, MPI_UNSIGNED_CHAR, buff, sumSize, &position, MPI_COMM_WORLD);
 			MPI_Pack(&packageMaster2Slave.colorB, 1, MPI_UNSIGNED_CHAR, buff, sumSize, &position, MPI_COMM_WORLD);
-		
+
 			MPI_Send(buff, position, MPI_PACKED, status.MPI_SOURCE, WORKTAG, MPI_COMM_WORLD);
-			
+
 			//
 			//	przetwarzanie odebranenych rezultatów, wstawienie do tablicy bitmapy w odpowiednim miejscu
 			//
-			
+
 			--tasks;
 			++i;
 		}
-		
-		
+
 		//-------------
-		//----  oczekiwanie na zakoñczenie ostatnich podzadañ, po rozdaniu wszystkich podzadañ z puli, 
+		//----  oczekiwanie na zakoñczenie ostatnich podzadañ, po rozdaniu wszystkich podzadañ z puli,
 		for (int rank = 1; rank <= worldSize; rank++)
 		{
-			
 			if (rank == slaveWithLastTask)
 			{
-				
+
 			}
 			else
 			{
@@ -209,8 +200,7 @@ int main(int argc, char *argv[])	// argv: depth, taskPerThread, x, y, colorR, co
 				MPI_Recv(buffRecv, slave2MasterSize, MPI_PACKED, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
 				position = 0;
 				MPI_Get_count(&status, MPI_PACKED, &msgSize);
-				
-				
+
 				MPI_Unpack(buffRecv, slave2MasterSize, &position, &packageSlave2Master.jobID, 1, MPI_INT, MPI_COMM_WORLD);
 				MPI_Unpack(buffRecv, slave2MasterSize, &position, &packageSlave2Master.ymin, 1, MPI_INT, MPI_COMM_WORLD);
 				MPI_Unpack(buffRecv, slave2MasterSize, &position, &packageSlave2Master.ymax, 1, MPI_INT, MPI_COMM_WORLD);
@@ -221,9 +211,8 @@ int main(int argc, char *argv[])	// argv: depth, taskPerThread, x, y, colorR, co
 			//
 			//	przetwarzanie odebranenych rezultatów, wstawienie do tablicy bitmapy w odpowiednim miejscu
 			//
-			
 		}
-		
+
 		//--------------
 		//----  wyslanie ¿adania zakonczenia pracy slave'om
 		//--------------
@@ -233,23 +222,23 @@ int main(int argc, char *argv[])	// argv: depth, taskPerThread, x, y, colorR, co
 		}
 	}
 	else
-	{		
+	{
 		//------------------
 		//----  okreœlenie potrzebnego rozmiaru bufora na komunikat master2Slave
-		MPI_Pack_size(5, MPI_INT, MPI_COMM_WORLD, &memberSize); 
+		MPI_Pack_size(5, MPI_INT, MPI_COMM_WORLD, &memberSize);
 		master2SlaveSize += memberSize; // master
 		MPI_Pack_size(3, MPI_CHAR, MPI_COMM_WORLD, &memberSize);
 		master2SlaveSize += memberSize;
 		buffRecv = (char*)malloc(master2SlaveSize);
-		
+
 		//------------------
 		//----  okreœlenie potrzebnego rozmiaru bufora na komunikat slave2Master - bêdzie trzeba zrobiæ to jeszcze raz dla ostatniego taska (mo¿liwy inny rozmiar)
-		MPI_Pack_size(3, MPI_INT, MPI_COMM_WORLD, &memberSize); 
+		MPI_Pack_size(3, MPI_INT, MPI_COMM_WORLD, &memberSize);
 		master2SlaveSize += memberSize; // master
 		MPI_Pack_size(3*numOfPixels, MPI_CHAR, MPI_COMM_WORLD, &memberSize);
 		master2SlaveSize += memberSize;
 		buffSend = (char*)malloc(slave2MasterSize);
-		
+
 		for (;;)
 		{
 			// MPI_Recv
@@ -258,7 +247,7 @@ int main(int argc, char *argv[])	// argv: depth, taskPerThread, x, y, colorR, co
 			// for pixels to calculate -> calculate
 			// MPI_PACK reponse
 			// MPI_Send to master
-			
+
 		}
 		// temporary rubbish, MPI_Unpack jest ok
 		//buffSend = (char*)malloc(sizeof(packageMaster2Slave));
@@ -266,7 +255,7 @@ int main(int argc, char *argv[])	// argv: depth, taskPerThread, x, y, colorR, co
 		MPI_Recv(buffRecv, master2SlaveSize, MPI_PACKED, 0, 23, MPI_COMM_WORLD, &status);
 		position = 0;
 		MPI_Get_count(&status, MPI_PACKED, &msgSize);
-		
+
 		MPI_Unpack(buffRecv, msgSize, &position, &packageMaster2Slave.jobID, 1, MPI_INT, MPI_COMM_WORLD);
 		MPI_Unpack(buffRecv, msgSize, &position, &packageMaster2Slave.x, 1, MPI_INT, MPI_COMM_WORLD);
 		MPI_Unpack(buffRecv, msgSize, &position, &packageMaster2Slave.ymin, 1, MPI_INT, MPI_COMM_WORLD);
@@ -275,7 +264,7 @@ int main(int argc, char *argv[])	// argv: depth, taskPerThread, x, y, colorR, co
 		MPI_Unpack(buffRecv, msgSize, &position, &packageMaster2Slave.colorR, 1, MPI_UNSIGNED_CHAR, MPI_COMM_WORLD);
 		MPI_Unpack(buffRecv, msgSize, &position, &packageMaster2Slave.colorG, 1, MPI_UNSIGNED_CHAR, MPI_COMM_WORLD);
 		MPI_Unpack(buffRecv, msgSize, &position, &packageMaster2Slave.colorB, 1, MPI_UNSIGNED_CHAR, MPI_COMM_WORLD);
-		
+
 		std::cout << packageMaster2Slave.jobID << std::endl;
 		std::cout << packageMaster2Slave.x << std::endl;
 		std::cout << packageMaster2Slave.ymin << std::endl;
@@ -284,10 +273,10 @@ int main(int argc, char *argv[])	// argv: depth, taskPerThread, x, y, colorR, co
 		std::cout << (int)packageMaster2Slave.colorR << std::endl;
 		std::cout << (int)packageMaster2Slave.colorG << std::endl;
 		std::cout << (int)packageMaster2Slave.colorB << std::endl;
-		
+
 		//RenderScene(depth);
 	}
-	
+
 	MPI_Finalize();
 	return 0;
 }
@@ -322,7 +311,7 @@ void renderScene(double x, double y, int depth)
 	double i = MIN_X, j = MIN_Y;
 	float shade;
 	double  step;
-	
+
 	if (horiz>vert)
 		step = (MAX_X - MIN_X) / horiz;
 	else
