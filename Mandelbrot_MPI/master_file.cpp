@@ -1,6 +1,7 @@
 #pragma once
 
 #include"structs.h"
+#include"bitmap_image.hpp"
 #include<mpi.h>
 #include<cmath>
 #include<iostream>
@@ -10,9 +11,14 @@
 struct master2Slave packageMaster2Slave;
 struct slave2Master packageSlave2Master;
 
+bitmap_image image;
+int y0;
+int x0;
 int master(int argc, char** argv);
 void packMaster();
 void unpackMaster();
+void doNiceStuff();
+
 
 int master(int argc, char** argv)
 {
@@ -24,11 +30,13 @@ int master(int argc, char** argv)
 	packageMaster2Slave.x = atoi(argv[3]);
 	packageMaster2Slave.ymin = 0;
 	packageMaster2Slave.ymax = 0;
-	int y0 = atoi(argv[4]);
+	x0 = atoi(argv[3]);	
+	y0 = atoi(argv[4]);
 	packageMaster2Slave.colorR = (unsigned char)atoi(argv[5]);
 	packageMaster2Slave.colorG = (unsigned char)atoi(argv[6]);
 	packageMaster2Slave.colorB = (unsigned char)atoi(argv[7]);
 	
+	image = bitmap_image(packageMaster2Slave.x, y0);
 	
 	int memberSize, msgSize, worldSize, worldRank;
 	int master2SlaveSize = 0;
@@ -40,7 +48,7 @@ int master(int argc, char** argv)
 	//int tasks = (worldSize - 1) * taskPerThread; // na ile podzadañ zostanie rozbite zadanie g³ówne
 	//if (tasks > y0) tasks = y0; // Zabezpieczenie przed zbyt dużą liczbą zadań
 
-	int rowNo = 0; // numery wierszy obecnie rozpatrywanych, przy podziale na taski, licz¹c od góry
+	int rowNo = 0; // numery wierszy obecnie rozpatrywanych, przy podziale na taski
 	int numberOfRowsPerTask = y0 / tasks;
 	tasks = ceil(y0/numberOfRowsPerTask); // psotor - prosty sposob zeby policzyc tyle taskow by bylo ok
 
@@ -53,8 +61,8 @@ int master(int argc, char** argv)
 
 
 	MPI_Init(&argc, &argv);
-    MPI_Comm_size(MPI_COMM_WORLD, &worldSize);
-    MPI_Comm_rank(MPI_COMM_WORLD, &worldRank);
+    	MPI_Comm_size(MPI_COMM_WORLD, &worldSize);
+    	MPI_Comm_rank(MPI_COMM_WORLD, &worldRank);
 
  	packageSlave2Master.colorR = (unsigned char*)malloc(numOfPixels*sizeof(char));
 	packageSlave2Master.colorG = (unsigned char*)malloc(numOfPixels*sizeof(char));
@@ -109,9 +117,9 @@ int master(int argc, char** argv)
 		MPI_Unpack(buffRecv, slave2MasterSize, &position, &packageSlave2Master.jobID, 1, MPI_INT, MPI_COMM_WORLD);
 		MPI_Unpack(buffRecv, slave2MasterSize, &position, &packageSlave2Master.ymin, 1, MPI_INT, MPI_COMM_WORLD);
 		MPI_Unpack(buffRecv, slave2MasterSize, &position, &packageSlave2Master.ymax, 1, MPI_INT, MPI_COMM_WORLD);
-		MPI_Unpack(buffRecv, slave2MasterSize, &position, &packageSlave2Master.colorR, numOfPixels, MPI_UNSIGNED_CHAR, MPI_COMM_WORLD);
-		MPI_Unpack(buffRecv, slave2MasterSize, &position, &packageSlave2Master.colorG, numOfPixels, MPI_UNSIGNED_CHAR, MPI_COMM_WORLD);
-		MPI_Unpack(buffRecv, slave2MasterSize, &position, &packageSlave2Master.colorB, numOfPixels, MPI_UNSIGNED_CHAR, MPI_COMM_WORLD);
+		MPI_Unpack(buffRecv, slave2MasterSize, &position, packageSlave2Master.colorR, numOfPixels, MPI_UNSIGNED_CHAR, MPI_COMM_WORLD);
+		MPI_Unpack(buffRecv, slave2MasterSize, &position, packageSlave2Master.colorG, numOfPixels, MPI_UNSIGNED_CHAR, MPI_COMM_WORLD);
+		MPI_Unpack(buffRecv, slave2MasterSize, &position, packageSlave2Master.colorB, numOfPixels, MPI_UNSIGNED_CHAR, MPI_COMM_WORLD);
 		
 		//ustalenie nastêpnego taska
 		position = 0;
@@ -137,6 +145,7 @@ int master(int argc, char** argv)
 		//
 		//	przetwarzanie odebranenych rezultatów, wstawienie do tablicy bitmapy w odpowiednim miejscu
 		//
+		doNiceStuff(); // 
 
 		--tasks;
 		++i;
@@ -160,11 +169,50 @@ int master(int argc, char** argv)
 		//
 		//	przetwarzanie odebranenych rezultatów, wstawienie do tablicy bitmapy w odpowiednim miejscu
 		//
+		doNiceStuff();
 	}
 	for (int rank = 1; rank <= worldSize; rank++)
 	{
 		MPI_Send(0, 0, MPI_PACKED, rank, DIETAG, MPI_COMM_WORLD);
 	}
 }
+
+void doNiceStuff()
+{
+	unsigned int i,j;
+	unsigned char r,g,b;
+	for (i=packageSlave2Master.ymin;i<packageSlave2Master.ymax && i < y0;++i)  //  i<y0 zapewni w ostatnim tasku że będzie ok
+	{
+		for (j = 0; j < x0; ++j)
+		{
+			r = packageSlave2Master.colorR[(i-ymin)*x0+j];
+			g = packageSlave2Master.colorG[(i-ymin)*x0+j];
+			b = packageSlave2Master.colorB[(i-ymin)*x0+j];
+			image.set_pixel(j,i,r,g,b);
+		}
+
+	}		
+	
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
