@@ -4,10 +4,11 @@
 #include<iostream>
 #include<mpi.h>
 #include<cmath>
+#include<stdlib.h>
 #define WORKTAG 1
 #define DIETAG 2
 struct master2Slave packageMaster2Slave;
-struct slave2Master packageSlave2Master
+struct slave2Master packageSlave2Master;
 
 int slave(int argc, char* argc[]);
 void packSlave();
@@ -20,7 +21,7 @@ int slave(int argc, char* argc[])
 	std::cout<<"Slave argc: "<<argc<<"  argv[0]: "<<argv[0]<<"\n";
 	
 	if (argc != 8) return -1;
-	
+	int taskPerThread = atoi(argv[2]);
 	packageMaster2Slave.x = atoi(argv[3]);
 	
 	int y0 = atoi(argv[4]);
@@ -42,15 +43,15 @@ int slave(int argc, char* argc[])
 
 	int numOfPixels = numberOfRowsPerTask * packageMaster2Slave.x;
 
-	buffRecv = (char*)malloc (sumSize)); //
+
 
 	MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &worldSize);
     MPI_Comm_rank(MPI_COMM_WORLD, &worldRank);
 
-	char* packageSlave2Master.colorR = (char*)malloc(numOfPixels*sizeof(char));
-	char* packageSlave2Master.colorG = (char*)malloc(numOfPixels*sizeof(char));
-	char* packageSlave2Master.colorB = (char*)malloc(numOfPixels*sizeof(char));
+	packageSlave2Master.colorR = (unsigned char*)malloc(numOfPixels*sizeof(char));
+	packageSlave2Master.colorG = (unsigned char*)malloc(numOfPixels*sizeof(char));
+	packageSlave2Master.colorB = (unsigned char*)malloc(numOfPixels*sizeof(char));
 
 	//------------------
 	//----  okreœlenie potrzebnego rozmiaru bufora na komunikat master2Slave

@@ -4,16 +4,17 @@
 #include<mpi.h>
 #include<cmath>
 #include<iostream>
+#include<stdlib.h>
 #define WORKTAG 1
 #define DIETAG 2
 struct master2Slave packageMaster2Slave;
-struct slave2Master packageSlave2Master
+struct slave2Master packageSlave2Master;
 
-int master(int argc, char* argv[]);
+int master(int argc, char** argv);
 void packMaster();
 void unpackMaster();
 
-int master(int argc, char* argv[])
+int master(int argc, char** argv)
 {
 	std::cout<<"Master argc: "<<argc<<"  argv[0]: "<<argv[0]<<"\n";
 	if (argc != 8) return -1;
@@ -55,9 +56,9 @@ int master(int argc, char* argv[])
     MPI_Comm_size(MPI_COMM_WORLD, &worldSize);
     MPI_Comm_rank(MPI_COMM_WORLD, &worldRank);
 
-	char* packageSlave2Master.colorR = (char*)malloc(numOfPixels*sizeof(char));
-	char* packageSlave2Master.colorG = (char*)malloc(numOfPixels*sizeof(char));
-	char* packageSlave2Master.colorB = (char*)malloc(numOfPixels*sizeof(char));
+ 	packageSlave2Master.colorR = (unsigned char*)malloc(numOfPixels*sizeof(char));
+	packageSlave2Master.colorG = (unsigned char*)malloc(numOfPixels*sizeof(char));
+	packageSlave2Master.colorB = (unsigned char*)malloc(numOfPixels*sizeof(char));
 
 	//------------------
 	//----  okreœlenie potrzebnego rozmiaru bufora na komunikat master2Slave
@@ -89,9 +90,9 @@ int master(int argc, char* argv[])
 		MPI_Pack(&packageMaster2Slave.ymin, 1, MPI_INT, buffSend, master2SlaveSize, &position, MPI_COMM_WORLD);
 		MPI_Pack(&packageMaster2Slave.ymax, 1, MPI_INT, buffSend, master2SlaveSize, &position, MPI_COMM_WORLD);
 		MPI_Pack(&packageMaster2Slave.depth, 1, MPI_INT, buffSend, master2SlaveSize, &position, MPI_COMM_WORLD);
-		MPI_Pack(&packageMaster2Slave.colorR, 1, MPI_UNSIGNED_CHAR, master2SlaveSize, sumSize, &position, MPI_COMM_WORLD);
-		MPI_Pack(&packageMaster2Slave.colorG, 1, MPI_UNSIGNED_CHAR, master2SlaveSize, sumSize, &position, MPI_COMM_WORLD);
-		MPI_Pack(&packageMaster2Slave.colorB, 1, MPI_UNSIGNED_CHAR, master2SlaveSize, sumSize, &position, MPI_COMM_WORLD);
+		MPI_Pack(&packageMaster2Slave.colorR, 1, MPI_UNSIGNED_CHAR, buffSend, master2SlaveSize, &position, MPI_COMM_WORLD);
+		MPI_Pack(&packageMaster2Slave.colorG, 1, MPI_UNSIGNED_CHAR, buffSend, master2SlaveSize, &position, MPI_COMM_WORLD);
+		MPI_Pack(&packageMaster2Slave.colorB, 1, MPI_UNSIGNED_CHAR, buffSend, master2SlaveSize, &position, MPI_COMM_WORLD);
 
 		MPI_Send(buffSend, position, MPI_PACKED, i + 1, WORKTAG, MPI_COMM_WORLD);
 		tasks--;
@@ -101,7 +102,7 @@ int master(int argc, char* argv[])
 	{
 		//recv od slave'ów
 
-		MPI_Recv(buffRecv, sumSize, MPI_PACKED, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+		MPI_Recv(buffRecv, slave2MasterSize, MPI_PACKED, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
 		position = 0;
 		MPI_Get_count(&status, MPI_PACKED, &msgSize);
 
@@ -122,16 +123,16 @@ int master(int argc, char* argv[])
 			
 		
 		//wys³anie nastêpnego taska
-		MPI_Pack(&packageMaster2Slave.jobID, 1, MPI_INT, buff, sumSize, &position, MPI_COMM_WORLD);
-		MPI_Pack(&packageMaster2Slave.x, 1, MPI_INT, buff, sumSize, &position, MPI_COMM_WORLD);
-		MPI_Pack(&packageMaster2Slave.ymin, 1, MPI_INT, buff, sumSize, &position, MPI_COMM_WORLD);
-		MPI_Pack(&packageMaster2Slave.ymax, 1, MPI_INT, buff, sumSize, &position, MPI_COMM_WORLD);
-		MPI_Pack(&packageMaster2Slave.depth, 1, MPI_INT, buff, sumSize, &position, MPI_COMM_WORLD);
-		MPI_Pack(&packageMaster2Slave.colorR, 1, MPI_UNSIGNED_CHAR, buff, sumSize, &position, MPI_COMM_WORLD);
-		MPI_Pack(&packageMaster2Slave.colorG, 1, MPI_UNSIGNED_CHAR, buff, sumSize, &position, MPI_COMM_WORLD);
-		MPI_Pack(&packageMaster2Slave.colorB, 1, MPI_UNSIGNED_CHAR, buff, sumSize, &position, MPI_COMM_WORLD);
+		MPI_Pack(&packageMaster2Slave.jobID, 1, MPI_INT, buffSend, master2SlaveSize, &position, MPI_COMM_WORLD);
+		MPI_Pack(&packageMaster2Slave.x, 1, MPI_INT, buffSend, master2SlaveSize, &position, MPI_COMM_WORLD);
+		MPI_Pack(&packageMaster2Slave.ymin, 1, MPI_INT, buffSend, master2SlaveSize, &position, MPI_COMM_WORLD);
+		MPI_Pack(&packageMaster2Slave.ymax, 1, MPI_INT, buffSend, master2SlaveSize, &position, MPI_COMM_WORLD);
+		MPI_Pack(&packageMaster2Slave.depth, 1, MPI_INT, buffSend, master2SlaveSize, &position, MPI_COMM_WORLD);
+		MPI_Pack(&packageMaster2Slave.colorR, 1, MPI_UNSIGNED_CHAR, buffSend, master2SlaveSize, &position, MPI_COMM_WORLD);
+		MPI_Pack(&packageMaster2Slave.colorG, 1, MPI_UNSIGNED_CHAR, buffSend, master2SlaveSize, &position, MPI_COMM_WORLD);
+		MPI_Pack(&packageMaster2Slave.colorB, 1, MPI_UNSIGNED_CHAR, buffSend, master2SlaveSize, &position, MPI_COMM_WORLD);
 
-		MPI_Send(buff, position, MPI_PACKED, status.MPI_SOURCE, WORKTAG, MPI_COMM_WORLD);
+		MPI_Send(buffSend, position, MPI_PACKED, status.MPI_SOURCE, WORKTAG, MPI_COMM_WORLD);
 
 		//
 		//	przetwarzanie odebranenych rezultatów, wstawienie do tablicy bitmapy w odpowiednim miejscu
