@@ -175,6 +175,7 @@ int master(int argc, char** argv)
 	{
 		MPI_Send(0, 0, MPI_PACKED, rank, DIETAG, MPI_COMM_WORLD);
 	}
+	image.save_image("output_file.bmp");
 }
 
 void doNiceStuff()
