@@ -1,0 +1,22 @@
+<h1>Create a new task</h1>
+
+<form action="{% url 'create' %}" method="POST">
+  {% csrf_token %}
+
+  <label for="depth">Depth:</label>
+  <input type="text" name="depth" id="depth" value="" /><br>
+
+  <label for="x">X:</label>
+  <input type="text" name="x" id="x" value="" /><br>
+
+  <label for="y">Y:</label>
+  <input type="text" name="y" id="y" value="" /><br>
+
+  <label for="taskPerThread">Task Per Thread:</label>
+  <input type="text" name="taskPerThread" id="taskPerThread" value="" /><br>
+
+  <label for="color">Color:</label>
+  <input type="color" name="color" id="color" /><br>
+
+  <input type="submit" value="Dodaj!" />
+</form>

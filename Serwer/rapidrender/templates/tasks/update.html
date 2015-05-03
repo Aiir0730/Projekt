@@ -1,0 +1,22 @@
+<h1>Update a task #{{ task.id }}</h1>
+
+<form action="{% url 'create' task.id %}" method="POST">
+  {% csrf_token %}
+
+  <label for="depth">Depth:</label>
+  <input type="text" name="depth" id="depth" value="{{ task.depth }}" /><br>
+
+  <label for="x">X:</label>
+  <input type="text" name="x" id="x" value="{{ task.x }}" /><br>
+
+  <label for="y">Y:</label>
+  <input type="text" name="y" id="y" value="{{ task.y }}" /><br>
+
+  <label for="taskPerThread">Task Per Thread:</label>
+  <input type="text" name="taskPerThread" id="taskPerThread" value="{{ task.taskPerThread }}" /><br>
+
+  <label for="color">Color:</label>
+  <input type="color" name="color" id="color" value="{{ color }}"/><br>
+
+  <input type="submit" value="Dodaj!" />
+</form>

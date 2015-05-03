@@ -1,0 +1,23 @@
+Lista zadan:<br>
+
+<ul>
+{% for task in tasks %}
+  <li><b> {{ task.id }} </b>
+    <ul>
+      <li>Depth: <b> {{ task.depth }} </b></li>
+      <li>X: <b> {{ task.x }} </b></li>
+      <li>Y: <b> {{ task.y }} </b></li>
+      <li>Task per thread: <b> {{ task.taskPerThread }} </b></li>
+      <li>Color: 
+        <div style="width: 50px; height; color: {{ task.make_rgb }}"> 
+        </div></li>
+      <br>
+      <li>Registration Time: <b> {{ task.registration_time }} </b></li>
+      <li>Start Time: <b> {{ task.start_time }} </b></li>
+      <li>Finish Time: <b> {{ task.finish_time }} </b></li>
+    </ul>
+  </li>
+  <br>
+  <a href="{% url 'detail' task.id %}">Show</a>
+{% endfor %}
+</ul>
