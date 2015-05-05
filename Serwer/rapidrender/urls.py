@@ -9,4 +9,5 @@ urlpatterns = patterns('',
     url(r'^create/$', views.create, name='create'),
     url(r'^(?P<task_id>[0-9]+)/update/$', views.update, name='update'),
     url(r'^(?P<task_id>[0-9]+)/delete/$', views.delete, name='delete'),
+    url(r'^(?P<task_id>[0-9]+)/start/$', views.start, name='start'),
 )

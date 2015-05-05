@@ -5,6 +5,10 @@ from django.utils import timezone
 from django.http import HttpResponseRedirect, HttpResponse
 from django.core.urlresolvers import reverse
 
+import subprocess
+import os
+import logging
+
 # Create your views here.
 # Like Task controller
 
@@ -66,6 +70,23 @@ def delete(request, task_id):
   task.delete()
 
   return HttpResponseRedirect('index')
+
+def start(request, task_id):
+  task = Task.objects.get(id=task_id)
+  #filename = request.GET['filename']
+  mpipath = os.path.dirname(os.path.realpath(__file__)) + '/../../Mandelbrot_MPI/mpi'
+  filename = 'mpirun'
+  arg1 = '-n'
+  arg2 = '5'
+  arg3 = mpipath
+  #arg1 = '-n 5'
+  #arg2 = task_id
+
+  subprocess.call([filename, arg1, arg2, arg3]) 
+  #logger = logging.getLogger(__name__)
+  #logger.error(filename)
+
+  return HttpResponseRedirect(reverse('index'))
 
 ###private###
 
