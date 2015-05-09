@@ -30,6 +30,8 @@ extern struct slave2Master packageSlave2Master;
 extern int DIETAG;
 extern int WORKTAG;
 
+extern int worldSize;
+extern int worldRank;
 
 
 #endif

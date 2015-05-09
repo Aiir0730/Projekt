@@ -24,7 +24,7 @@ float magnitude(double x, double y);
 //funkcja licz¹ca odcieñ piksela (px,py), depth - liczba wyrazów ci¹gu branych pod uwagê przy sprawdzaniu zbie¿noœci
 int convergence(double px, double py, int depth);
 
-int slave(int argc, char* argv[])
+int slave(int argc, char* argv[], int worldSize)
 {
     	int y0, x0;
 	std::cout << "Slave argc: "<< argc << " argv[0]: " << argv[0] << "\n";
@@ -35,7 +35,7 @@ int slave(int argc, char* argv[])
 	x0 = atoi(argv[3]);
 	y0 = atoi(argv[4]);
 
-	int memberSize, msgSize, worldSize, worldRank;
+	int memberSize;
 	int master2SlaveSize = 0;
 	int slave2MasterSize = 0;
 	int position = 0;
@@ -62,37 +62,40 @@ int slave(int argc, char* argv[])
 
 	//------------------
 	//----  okreœlenie potrzebnego rozmiaru bufora na komunikat master2Slave
+	std::cout<<"	LOL1\n";	
 	MPI_Pack_size(5, MPI_INT, MPI_COMM_WORLD, &memberSize);
-	master2SlaveSize += memberSize; // master
+	master2SlaveSize = memberSize; // master
 	MPI_Pack_size(3, MPI_CHAR, MPI_COMM_WORLD, &memberSize);
 	master2SlaveSize += memberSize;
 	buffRecv = (char*)malloc(master2SlaveSize);
-
+	std::cout<<"	LOL2	\n";
 	//------------------
 	//----  okreœlenie potrzebnego rozmiaru bufora na komunikat slave2Master - bêdzie trzeba zrobiæ to jeszcze raz dla ostatniego taska (mo¿liwy inny rozmiar)
 	MPI_Pack_size(3, MPI_INT, MPI_COMM_WORLD, &memberSize);
-	slave2MasterSize += memberSize; // master
+	slave2MasterSize = memberSize; // master
 	MPI_Pack_size(3 * numOfPixels, MPI_CHAR, MPI_COMM_WORLD, &memberSize);
 	slave2MasterSize += memberSize;
 	buffSend = (char*)malloc(slave2MasterSize);
-
+	std::cout<<"	LOL3	\n";
 	for (;;)
 	{
+		std::cout<<"	LOL4	\n";
 		MPI_Recv(buffRecv, master2SlaveSize, MPI_PACKED, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-
+		std::cout<<"	LOL4.5	\n";
 		if (status.MPI_TAG == DIETAG)
 			return 0;
 
 		position = 0;
-		MPI_Unpack(buffRecv, msgSize, &position, &packageMaster2Slave.jobID, 1, MPI_INT, MPI_COMM_WORLD);
-		MPI_Unpack(buffRecv, msgSize, &position, &packageMaster2Slave.x, 1, MPI_INT, MPI_COMM_WORLD);
-		MPI_Unpack(buffRecv, msgSize, &position, &packageMaster2Slave.ymin, 1, MPI_INT, MPI_COMM_WORLD);
-		MPI_Unpack(buffRecv, msgSize, &position, &packageMaster2Slave.ymax, 1, MPI_INT, MPI_COMM_WORLD);
-		MPI_Unpack(buffRecv, msgSize, &position, &packageMaster2Slave.depth, 1, MPI_INT, MPI_COMM_WORLD);
-		MPI_Unpack(buffRecv, msgSize, &position, &packageMaster2Slave.colorR, 1, MPI_UNSIGNED_CHAR, MPI_COMM_WORLD);
-		MPI_Unpack(buffRecv, msgSize, &position, &packageMaster2Slave.colorG, 1, MPI_UNSIGNED_CHAR, MPI_COMM_WORLD);
-		MPI_Unpack(buffRecv, msgSize, &position, &packageMaster2Slave.colorB, 1, MPI_UNSIGNED_CHAR, MPI_COMM_WORLD);
+		MPI_Unpack(buffRecv, master2SlaveSize, &position, &packageMaster2Slave.jobID, 1, MPI_INT, MPI_COMM_WORLD);
+		MPI_Unpack(buffRecv, master2SlaveSize, &position, &packageMaster2Slave.x, 1, MPI_INT, MPI_COMM_WORLD);
+		MPI_Unpack(buffRecv, master2SlaveSize, &position, &packageMaster2Slave.ymin, 1, MPI_INT, MPI_COMM_WORLD);
+		MPI_Unpack(buffRecv, master2SlaveSize, &position, &packageMaster2Slave.ymax, 1, MPI_INT, MPI_COMM_WORLD);
+		MPI_Unpack(buffRecv, master2SlaveSize, &position, &packageMaster2Slave.depth, 1, MPI_INT, MPI_COMM_WORLD);
+		MPI_Unpack(buffRecv, master2SlaveSize, &position, &packageMaster2Slave.colorR, 1, MPI_UNSIGNED_CHAR, MPI_COMM_WORLD);
+		MPI_Unpack(buffRecv, master2SlaveSize, &position, &packageMaster2Slave.colorG, 1, MPI_UNSIGNED_CHAR, MPI_COMM_WORLD);
+		MPI_Unpack(buffRecv, master2SlaveSize, &position, &packageMaster2Slave.colorB, 1, MPI_UNSIGNED_CHAR, MPI_COMM_WORLD);
 
+		std::cout<<"	LOL5	\n";
 		// for pixels to calculate -> calculate
 		doMath(x0, y0, packageMaster2Slave.depth);
 
@@ -115,16 +118,16 @@ int slave(int argc, char* argv[])
 	sumSize = sizeof(packageMaster2Slave);
 	MPI_Recv(buffRecv, master2SlaveSize, MPI_PACKED, 0, 23, MPI_COMM_WORLD, &status);
 	position = 0;
-	MPI_Get_count(&status, MPI_PACKED, &msgSize);
+	MPI_Get_count(&status, MPI_PACKED, &master2SlaveSize);
 
-	MPI_Unpack(buffRecv, msgSize, &position, &packageMaster2Slave.jobID, 1, MPI_INT, MPI_COMM_WORLD);
-	MPI_Unpack(buffRecv, msgSize, &position, &packageMaster2Slave.x, 1, MPI_INT, MPI_COMM_WORLD);
-	MPI_Unpack(buffRecv, msgSize, &position, &packageMaster2Slave.ymin, 1, MPI_INT, MPI_COMM_WORLD);
-	MPI_Unpack(buffRecv, msgSize, &position, &packageMaster2Slave.ymax, 1, MPI_INT, MPI_COMM_WORLD);
-	MPI_Unpack(buffRecv, msgSize, &position, &packageMaster2Slave.depth, 1, MPI_INT, MPI_COMM_WORLD);
-	MPI_Unpack(buffRecv, msgSize, &position, &packageMaster2Slave.colorR, 1, MPI_UNSIGNED_CHAR, MPI_COMM_WORLD);
-	MPI_Unpack(buffRecv, msgSize, &position, &packageMaster2Slave.colorG, 1, MPI_UNSIGNED_CHAR, MPI_COMM_WORLD);
-	MPI_Unpack(buffRecv, msgSize, &position, &packageMaster2Slave.colorB, 1, MPI_UNSIGNED_CHAR, MPI_COMM_WORLD);
+	MPI_Unpack(buffRecv, master2SlaveSize, &position, &packageMaster2Slave.jobID, 1, MPI_INT, MPI_COMM_WORLD);
+	MPI_Unpack(buffRecv, master2SlaveSize, &position, &packageMaster2Slave.x, 1, MPI_INT, MPI_COMM_WORLD);
+	MPI_Unpack(buffRecv, master2SlaveSize, &position, &packageMaster2Slave.ymin, 1, MPI_INT, MPI_COMM_WORLD);
+	MPI_Unpack(buffRecv, master2SlaveSize, &position, &packageMaster2Slave.ymax, 1, MPI_INT, MPI_COMM_WORLD);
+	MPI_Unpack(buffRecv, master2SlaveSize, &position, &packageMaster2Slave.depth, 1, MPI_INT, MPI_COMM_WORLD);
+	MPI_Unpack(buffRecv, master2SlaveSize, &position, &packageMaster2Slave.colorR, 1, MPI_UNSIGNED_CHAR, MPI_COMM_WORLD);
+	MPI_Unpack(buffRecv, master2SlaveSize, &position, &packageMaster2Slave.colorG, 1, MPI_UNSIGNED_CHAR, MPI_COMM_WORLD);
+	MPI_Unpack(buffRecv, master2SlaveSize, &position, &packageMaster2Slave.colorB, 1, MPI_UNSIGNED_CHAR, MPI_COMM_WORLD);
 
 	*/
 }

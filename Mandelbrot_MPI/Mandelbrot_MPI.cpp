@@ -2,8 +2,8 @@
 #include "slave_file.cpp"
 #include<stdio.h>
 
-int master(int argc, char* argv[]);
-int slave(int argc, char* argv[]);
+int master(int argc, char* argv[], int worldSize);
+int slave(int argc, char* argv[], int worldSize);
 
 
 //inicjalizacja zmiennych globalnych
@@ -13,7 +13,8 @@ struct slave2Master packageSlave2Master;
 int DIETAG = 2;
 int WORKTAG = 1;
 
-
+int worldSize;
+int worldRank;
 
 
 
@@ -32,13 +33,15 @@ int main(int argc, char *argv[])	// argv: depth, taskPerThread, x, y, colorR, co
     	MPI_Comm_size(MPI_COMM_WORLD, &worldSize);
     	MPI_Comm_rank(MPI_COMM_WORLD, &worldRank);
 
+	std::cout<<"worldSize MPI: "<<worldSize<<"\n";
+
 	if (worldRank == 0)
 	{
-		master(argc, argv);
+		master(argc, argv, worldSize);
 	}
 	else
 	{
-		slave(argc, argv);
+		slave(argc, argv, worldSize);
 	}
 
 	MPI_Finalize();
