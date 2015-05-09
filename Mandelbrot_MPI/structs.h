@@ -1,4 +1,5 @@
-#pragma once
+#ifndef __STRUCTS
+#define __STRUCTS
 
 struct master2Slave
 {
@@ -22,3 +23,13 @@ struct slave2Master
 	unsigned char* colorB;
 };
 
+
+extern struct master2Slave packageMaster2Slave;
+extern struct slave2Master packageSlave2Master;
+
+extern int DIETAG;
+extern int WORKTAG;
+
+
+
+#endif
