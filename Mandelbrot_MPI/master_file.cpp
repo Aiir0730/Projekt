@@ -1,13 +1,12 @@
 #include "structs.h"
-#include "globals.h"
 #include "bitmap_image.hpp"
 #include <mpi.h>
 #include <cmath>
 #include <iostream>
 #include <cstdlib>
 
-struct master2Slave packageMaster2Slave;
-struct slave2Master packageSlave2Master;
+
+
 
 bitmap_image image;
 int master(int argc, char** argv);
@@ -20,7 +19,7 @@ int master(int argc, char** argv)
     int y0, x0;
 	std::cout << "Master argc: " << argc << " argv[0]: " << argv[0] << "\n";
 	if (argc != 8) return -1;
-
+	
 	packageMaster2Slave.depth = atoi(argv[1]);
 	int taskPerThread = atoi(argv[2]);
 	packageMaster2Slave.x = atoi(argv[3]);
@@ -39,9 +38,9 @@ int master(int argc, char** argv)
 	int slave2MasterSize = 0;
 	int position = 0;
 
-	int tasks; // skoro wysylamy zadania az do (rowNo < y0)
-	//int tasks = (worldSize - 1) * taskPerThread; // na ile podzadañ zostanie rozbite zadanie g³ówne
-	//if (tasks > y0) tasks = y0; // Zabezpieczenie przed zbyt dużą liczbą zadań
+	//int tasks; // skoro wysylamy zadania az do (rowNo < y0)
+	int tasks = (worldSize - 1) * taskPerThread; // na ile podzadañ zostanie rozbite zadanie g³ówne
+	if (tasks > y0) tasks = y0; // Zabezpieczenie przed zbyt dużą liczbą zadań
 
 	int rowNo = 0; // numery wierszy obecnie rozpatrywanych, przy podziale na taski
 	int numberOfRowsPerTask = y0 / tasks;
@@ -51,11 +50,11 @@ int master(int argc, char** argv)
 	char* buffRecv;
 	MPI_Status status;
 
-	int numOfPixels = numberOfRowsPerTask * packageMaster2Slave.x;
+	int numOfPixels = numberOfRowsPerTask * x0;
 
-	MPI_Init(&argc, &argv);
-    	MPI_Comm_size(MPI_COMM_WORLD, &worldSize);
-    	MPI_Comm_rank(MPI_COMM_WORLD, &worldRank);
+	//MPI_Init(&argc, &argv);
+    	//MPI_Comm_size(MPI_COMM_WORLD, &worldSize);
+    	//MPI_Comm_rank(MPI_COMM_WORLD, &worldRank);
 
  	packageSlave2Master.colorR = (unsigned char*)malloc(numOfPixels*sizeof(char));
 	packageSlave2Master.colorG = (unsigned char*)malloc(numOfPixels*sizeof(char));
@@ -64,7 +63,7 @@ int master(int argc, char** argv)
 	//------------------
 	//----  okreœlenie potrzebnego rozmiaru bufora na komunikat master2Slave
 	MPI_Pack_size(5, MPI_INT, MPI_COMM_WORLD, &memberSize);
-	master2SlaveSize += memberSize; // master
+	master2SlaveSize = memberSize; // master
 	MPI_Pack_size(3, MPI_CHAR, MPI_COMM_WORLD, &memberSize);
 	master2SlaveSize += memberSize;
 	buffSend = (char*)malloc(master2SlaveSize);
@@ -72,7 +71,7 @@ int master(int argc, char** argv)
 	//------------------
 	//----  okreœlenie potrzebnego rozmiaru bufora na komunikat slave2Master - bêdzie trzeba zrobiæ to jeszcze raz dla ostatniego taska (mo¿liwy inny rozmiar)
 	MPI_Pack_size(3, MPI_INT, MPI_COMM_WORLD, &memberSize);
-	slave2MasterSize += memberSize; // master
+	slave2MasterSize = memberSize; // master
 	MPI_Pack_size(3 * numOfPixels, MPI_CHAR, MPI_COMM_WORLD, &memberSize);
 	slave2MasterSize += memberSize;
 	buffRecv = (char*)malloc(slave2MasterSize);

@@ -1,17 +1,15 @@
 #include "structs.h"
-#include "globals.h"
 #include <iostream>
 #include <mpi.h>
 #include <cmath>
 #include <cstdlib>
 
-struct master2Slave packageMaster2Slave;
-struct slave2Master packageSlave2Master;
+
 
 int slave(int argc, char* argv[]);
 void packSlave();
 void unpackSlave();
-void doMath(int x0, int y0);
+void doMath(int x0, int y0, int depth);
 
 float MIN_X = -7.0f;
 float MAX_X = 7.0f;
@@ -28,7 +26,7 @@ int convergence(double px, double py, int depth);
 
 int slave(int argc, char* argv[])
 {
-    int y0, x0;
+    	int y0, x0;
 	std::cout << "Slave argc: "<< argc << " argv[0]: " << argv[0] << "\n";
 
 	if (argc != 8) return -1;
@@ -54,9 +52,9 @@ int slave(int argc, char* argv[])
 
 	int numOfPixels = numberOfRowsPerTask * packageMaster2Slave.x;
 
-	MPI_Init(&argc, &argv);
-	MPI_Comm_size(MPI_COMM_WORLD, &worldSize);
-	MPI_Comm_rank(MPI_COMM_WORLD, &worldRank);
+	//MPI_Init(&argc, &argv);
+	//MPI_Comm_size(MPI_COMM_WORLD, &worldSize);
+	//MPI_Comm_rank(MPI_COMM_WORLD, &worldRank);
 
 	packageSlave2Master.colorR = (unsigned char*)malloc(numOfPixels*sizeof(char));
 	packageSlave2Master.colorG = (unsigned char*)malloc(numOfPixels*sizeof(char));
@@ -96,7 +94,7 @@ int slave(int argc, char* argv[])
 		MPI_Unpack(buffRecv, msgSize, &position, &packageMaster2Slave.colorB, 1, MPI_UNSIGNED_CHAR, MPI_COMM_WORLD);
 
 		// for pixels to calculate -> calculate
-		doMath(x0, y0);
+		doMath(x0, y0, packageMaster2Slave.depth);
 
 		// MPI_PACK response
 		position = 0;
@@ -131,7 +129,7 @@ int slave(int argc, char* argv[])
 	*/
 }
 
-void doMath(int x0, int y0)
+void doMath(int x0, int y0, int depth)
 {
 	double i = MIN_X, j, temp_MAX_Y;
 	float shade;
@@ -143,7 +141,7 @@ void doMath(int x0, int y0)
 	temp_MAX_Y = MIN_Y + (MAX_Y-MIN_Y)*packageMaster2Slave.ymax/y0;
 
 
-	if (horiz > vert)
+	if (x0 > y0)
 		step = (MAX_X - MIN_X) / x0;
 	else
 		step = (MAX_Y - MIN_Y) / y0;
@@ -156,7 +154,7 @@ void doMath(int x0, int y0)
 		j = MIN_X;
 		while (j <= MAX_X && x_pix < x0)
 		{
-			shade = convergence(j, i) / depth;
+			shade = (float)convergence(j, i, depth) / (float) depth;
 			packageSlave2Master.colorR[(y_pix-packageMaster2Slave.ymin)*x0+x_pix] = shade * packageMaster2Slave.colorR;
 			packageSlave2Master.colorG[(y_pix-packageMaster2Slave.ymin)*x0+x_pix] = shade * packageMaster2Slave.colorG;
 			packageSlave2Master.colorB[(y_pix-packageMaster2Slave.ymin)*x0+x_pix] = shade * packageMaster2Slave.colorB;
