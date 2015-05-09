@@ -1,50 +1,45 @@
-#pragma once
+#include "structs.h"
+#include "globals.h"
+#include "bitmap_image.hpp"
+#include <mpi.h>
+#include <cmath>
+#include <iostream>
+#include <cstdlib>
 
-#include"structs.h"
-#include"bitmap_image.hpp"
-#include<mpi.h>
-#include<cmath>
-#include<iostream>
-#include<stdlib.h>
-#define WORKTAG 1
-#define DIETAG 2
 struct master2Slave packageMaster2Slave;
 struct slave2Master packageSlave2Master;
 
 bitmap_image image;
-int y0;
-int x0;
 int master(int argc, char** argv);
 void packMaster();
 void unpackMaster();
-void doNiceStuff();
-
+void doNiceStuff(int x0, int y0, int ymin, int ymax);
 
 int master(int argc, char** argv)
 {
-	std::cout<<"Master argc: "<<argc<<"  argv[0]: "<<argv[0]<<"\n";
+    int y0, x0;
+	std::cout << "Master argc: " << argc << " argv[0]: " << argv[0] << "\n";
 	if (argc != 8) return -1;
-	
+
 	packageMaster2Slave.depth = atoi(argv[1]);
 	int taskPerThread = atoi(argv[2]);
 	packageMaster2Slave.x = atoi(argv[3]);
 	packageMaster2Slave.ymin = 0;
 	packageMaster2Slave.ymax = 0;
-	x0 = atoi(argv[3]);	
+	x0 = atoi(argv[3]);
 	y0 = atoi(argv[4]);
 	packageMaster2Slave.colorR = (unsigned char)atoi(argv[5]);
 	packageMaster2Slave.colorG = (unsigned char)atoi(argv[6]);
 	packageMaster2Slave.colorB = (unsigned char)atoi(argv[7]);
-	
+
 	image = bitmap_image(packageMaster2Slave.x, y0);
-	
+
 	int memberSize, msgSize, worldSize, worldRank;
 	int master2SlaveSize = 0;
 	int slave2MasterSize = 0;
 	int position = 0;
 
-	
-	int tasks; // skoro wysylamy zadania az do (rowNo < y0) 
+	int tasks; // skoro wysylamy zadania az do (rowNo < y0)
 	//int tasks = (worldSize - 1) * taskPerThread; // na ile podzadañ zostanie rozbite zadanie g³ówne
 	//if (tasks > y0) tasks = y0; // Zabezpieczenie przed zbyt dużą liczbą zadań
 
@@ -57,8 +52,6 @@ int master(int argc, char** argv)
 	MPI_Status status;
 
 	int numOfPixels = numberOfRowsPerTask * packageMaster2Slave.x;
-
-
 
 	MPI_Init(&argc, &argv);
     	MPI_Comm_size(MPI_COMM_WORLD, &worldSize);
@@ -105,7 +98,7 @@ int master(int argc, char** argv)
 		MPI_Send(buffSend, position, MPI_PACKED, i + 1, WORKTAG, MPI_COMM_WORLD);
 		tasks--;
 	}
-	
+
 	while(tasks > 0)
 	{
 		//recv od slave'ów
@@ -120,16 +113,15 @@ int master(int argc, char** argv)
 		MPI_Unpack(buffRecv, slave2MasterSize, &position, packageSlave2Master.colorR, numOfPixels, MPI_UNSIGNED_CHAR, MPI_COMM_WORLD);
 		MPI_Unpack(buffRecv, slave2MasterSize, &position, packageSlave2Master.colorG, numOfPixels, MPI_UNSIGNED_CHAR, MPI_COMM_WORLD);
 		MPI_Unpack(buffRecv, slave2MasterSize, &position, packageSlave2Master.colorB, numOfPixels, MPI_UNSIGNED_CHAR, MPI_COMM_WORLD);
-		
+
 		//ustalenie nastêpnego taska
 		position = 0;
 		packageMaster2Slave.jobID = i;
 		packageMaster2Slave.ymin = rowNo;
 		packageMaster2Slave.ymax = rowNo + numberOfRowsPerTask;
-		
+
 		rowNo += numberOfRowsPerTask;
-			
-		
+
 		//wys³anie nastêpnego taska
 		MPI_Pack(&packageMaster2Slave.jobID, 1, MPI_INT, buffSend, master2SlaveSize, &position, MPI_COMM_WORLD);
 		MPI_Pack(&packageMaster2Slave.x, 1, MPI_INT, buffSend, master2SlaveSize, &position, MPI_COMM_WORLD);
@@ -145,7 +137,7 @@ int master(int argc, char** argv)
 		//
 		//	przetwarzanie odebranenych rezultatów, wstawienie do tablicy bitmapy w odpowiednim miejscu
 		//
-		doNiceStuff(); // 
+		doNiceStuff(x0, y0, packageMaster2Slave.ymin, packageSlave2Master.ymax); //
 
 		--tasks;
 		++i;
@@ -154,7 +146,6 @@ int master(int argc, char** argv)
 	//----  oczekiwanie na zakoñczenie ostatnich podzadañ, po rozdaniu wszystkich podzadañ z puli,
 	for (int rank = 1; rank <= worldSize; rank++)
 	{
-		
 		//recv od slave'ów
 		MPI_Recv(buffRecv, slave2MasterSize, MPI_PACKED, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
 		position = 0;
@@ -169,7 +160,7 @@ int master(int argc, char** argv)
 		//
 		//	przetwarzanie odebranenych rezultatów, wstawienie do tablicy bitmapy w odpowiednim miejscu
 		//
-		doNiceStuff();
+		doNiceStuff(x0, y0, packageSlave2Master.ymin, packageSlave2Master.ymax);
 	}
 	for (int rank = 1; rank <= worldSize; rank++)
 	{
@@ -178,11 +169,11 @@ int master(int argc, char** argv)
 	image.save_image("output_file.bmp");
 }
 
-void doNiceStuff()
+void doNiceStuff(int x0, int y0, int ymin, int ymax)
 {
-	unsigned int i,j;
-	unsigned char r,g,b;
-	for (i=packageSlave2Master.ymin;i<packageSlave2Master.ymax && i < y0;++i)  //  i<y0 zapewni w ostatnim tasku że będzie ok
+	unsigned int i, j;
+	unsigned char r, g, b;
+	for (i = ymin; (i < ymax) && (i < y0); ++i)  //  i<y0 zapewni w ostatnim tasku że będzie ok
 	{
 		for (j = 0; j < x0; ++j)
 		{
@@ -191,9 +182,7 @@ void doNiceStuff()
 			b = packageSlave2Master.colorB[(i-ymin)*x0+j];
 			image.set_pixel(j,i,r,g,b);
 		}
-
-	}		
-	
+	}
 }
 
 

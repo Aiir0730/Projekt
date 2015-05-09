@@ -1,15 +1,8 @@
-#include <iostream>
-#include <cstdlib>
-#include <cmath>
-#include <mpi.h>
-
 #include "master_file.cpp"
 #include "slave_file.cpp"
 
 int master(int argc, char* argv[]);
 int slave(int argc, char* argv[]);
-
-
 
 // G³ówny punkt wej¶cia programu. Program dzia³a w trybie konsoli
 int main(int argc, char *argv[])	// argv: depth, taskPerThread, x, y, colorR, colorG, colorB
