@@ -86,6 +86,7 @@ int master(int argc, char** argv, int worldSize)
 	int i = 0; // bedziemy tez traktowac jako jobID
 	for (i; i < worldSize - 1; i++)
 	{
+		std::cout<<"	MASTER - step 1 - i: "<<i<<"\n";
 		packageMaster2Slave.jobID = i;
 		packageMaster2Slave.ymin = rowNo;
 		packageMaster2Slave.ymax = rowNo + numberOfRowsPerTask;
@@ -101,9 +102,9 @@ int master(int argc, char** argv, int worldSize)
 		MPI_Pack(&packageMaster2Slave.colorG, 1, MPI_UNSIGNED_CHAR, buffSend, master2SlaveSize, &position, MPI_COMM_WORLD);
 		MPI_Pack(&packageMaster2Slave.colorB, 1, MPI_UNSIGNED_CHAR, buffSend, master2SlaveSize, &position, MPI_COMM_WORLD);
 
-		std::cout<<"	MASTER - ready to send\n";
+		std::cout<<"	MASTER - step 1 - ready to send\n";
 		MPI_Send(buffSend, position, MPI_PACKED, i + 1, WORKTAG, MPI_COMM_WORLD);
-		std::cout<<"	MASTER - send\n";		
+		std::cout<<"	MASTER - step 1 - send\n";		
 		tasks--;
 		
 	}
@@ -117,12 +118,17 @@ int master(int argc, char** argv, int worldSize)
 		MPI_Get_count(&status, MPI_PACKED, &msgSize);
 		std::cout<<"	MASTER - step 2 - unpacking\n";
 		MPI_Unpack(buffRecv, slave2MasterSize, &position, &packageSlave2Master.jobID, 1, MPI_INT, MPI_COMM_WORLD);
+		std::cout<<"		unpack jobID: "<<packageSlave2Master.jobID<<"\n";				
 		MPI_Unpack(buffRecv, slave2MasterSize, &position, &packageSlave2Master.ymin, 1, MPI_INT, MPI_COMM_WORLD);
+		std::cout<<"		unpack ymin: "<<packageSlave2Master.ymin<<"\n";				
 		MPI_Unpack(buffRecv, slave2MasterSize, &position, &packageSlave2Master.ymax, 1, MPI_INT, MPI_COMM_WORLD);
+		std::cout<<"		unpack ymax: "<<packageSlave2Master.ymax<<"\n";		
 		MPI_Unpack(buffRecv, slave2MasterSize, &position, packageSlave2Master.colorR, numOfPixels, MPI_UNSIGNED_CHAR, MPI_COMM_WORLD);
+		std::cout<<"		unpack colorR: "<<*(packageSlave2Master.colorR)<<"\n";		
 		MPI_Unpack(buffRecv, slave2MasterSize, &position, packageSlave2Master.colorG, numOfPixels, MPI_UNSIGNED_CHAR, MPI_COMM_WORLD);
+		std::cout<<"		unpack colorG: "<<*(packageSlave2Master.colorG)<<"\n";		
 		MPI_Unpack(buffRecv, slave2MasterSize, &position, packageSlave2Master.colorB, numOfPixels, MPI_UNSIGNED_CHAR, MPI_COMM_WORLD);
-
+		std::cout<<"		unpack colorB: "<<*(packageSlave2Master.colorB)<<"\n";		
 		//ustalenie nastêpnego taska
 		position = 0;
 		packageMaster2Slave.jobID = i;
@@ -164,11 +170,17 @@ int master(int argc, char** argv, int worldSize)
 		MPI_Get_count(&status, MPI_PACKED, &msgSize);
 		std::cout<<"	MASTER - step 3 - unpacking\n";
 		MPI_Unpack(buffRecv, slave2MasterSize, &position, &packageSlave2Master.jobID, 1, MPI_INT, MPI_COMM_WORLD);
+		std::cout<<"		unpack jobID: "<<packageSlave2Master.jobID<<"\n";				
 		MPI_Unpack(buffRecv, slave2MasterSize, &position, &packageSlave2Master.ymin, 1, MPI_INT, MPI_COMM_WORLD);
+		std::cout<<"		unpack ymin: "<<packageSlave2Master.ymin<<"\n";				
 		MPI_Unpack(buffRecv, slave2MasterSize, &position, &packageSlave2Master.ymax, 1, MPI_INT, MPI_COMM_WORLD);
-		MPI_Unpack(buffRecv, slave2MasterSize, &position, &packageSlave2Master.colorR, numOfPixels, MPI_UNSIGNED_CHAR, MPI_COMM_WORLD);
-		MPI_Unpack(buffRecv, slave2MasterSize, &position, &packageSlave2Master.colorG, numOfPixels, MPI_UNSIGNED_CHAR, MPI_COMM_WORLD);
-		MPI_Unpack(buffRecv, slave2MasterSize, &position, &packageSlave2Master.colorB, numOfPixels, MPI_UNSIGNED_CHAR, MPI_COMM_WORLD);
+		std::cout<<"		unpack ymax: "<<packageSlave2Master.ymax<<"\n";		
+		MPI_Unpack(buffRecv, slave2MasterSize, &position, packageSlave2Master.colorR, numOfPixels, MPI_UNSIGNED_CHAR, MPI_COMM_WORLD);
+		std::cout<<"		unpack colorR: "<<*(packageSlave2Master.colorR)<<"\n";		
+		MPI_Unpack(buffRecv, slave2MasterSize, &position, packageSlave2Master.colorG, numOfPixels, MPI_UNSIGNED_CHAR, MPI_COMM_WORLD);
+		std::cout<<"		unpack colorG: "<<*(packageSlave2Master.colorG)<<"\n";		
+		MPI_Unpack(buffRecv, slave2MasterSize, &position, packageSlave2Master.colorB, numOfPixels, MPI_UNSIGNED_CHAR, MPI_COMM_WORLD);
+		std::cout<<"		unpack colorB: "<<*(packageSlave2Master.colorB)<<"\n";	
 		//
 		//	przetwarzanie odebranenych rezultatów, wstawienie do tablicy bitmapy w odpowiednim miejscu
 		//

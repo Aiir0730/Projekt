@@ -2,5 +2,8 @@
 
 	clear
 	make
-	echo " mpirun -n 2 ./mpi 2 4 200 200 0 100 255"
-	mpirun -n 2 ./mpi 2 4 20 20 100 100 100 
+	#echo " mpirun -n 2 ./mpi 2 4 200 200 0 100 255"
+	var=" mpirun -n 3 ./mpi 2 4 200 200 0 100 255" 
+	
+	echo $var
+	$var
