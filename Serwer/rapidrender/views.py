@@ -1,9 +1,11 @@
 from django.shortcuts import render
 from rapidrender.models import Task
+from django.contrib.auth.models import User
 
 from django.utils import timezone
 from django.http import HttpResponseRedirect, HttpResponse
 from django.core.urlresolvers import reverse
+from django.contrib.auth.decorators import login_required
 
 import subprocess
 import os
@@ -12,17 +14,21 @@ import logging
 # Create your views here.
 # Like Task controller
 
+@login_required
 def index(request):
-  tasks = Task.objects.all()
+  tasks = request.user.task_set.all()
   return render(request, 'tasks/index.html', {'tasks': tasks})
 
+@login_required
 def detail(request, task_id):
   task = Task.objects.get(id=task_id)
   return render(request, 'tasks/detail.html', {'task': task})
 
+@login_required
 def new(request):
   return render(request, 'tasks/new.html', {})
 
+@login_required
 def create(request):
   color = __color_helper(request.POST['color'])
 
@@ -37,11 +43,13 @@ def create(request):
                  start_time = timezone.now(),
                  finish_time = timezone.now(),
                  status = "Registered",
+                 user_id = request.user.id,
                  )
 
   newtask.save()
   return HttpResponseRedirect(reverse('detail', args=(newtask.id,)))
 
+@login_required
 def update(request, task_id):
   task = Task.objects.get(id=task_id)
   if request.method == 'GET':
@@ -65,12 +73,14 @@ def update(request, task_id):
     task.save()
     return HttpResponseRedirect(reverse('detail', args=(task.id,)))
 
+@login_required
 def delete(request, task_id):
   task = Task.objects.get(id=task_id)
   task.delete()
 
   return HttpResponseRedirect('index')
 
+@login_required
 def start(request, task_id):
   task = Task.objects.get(id=task_id)
   #filename = request.GET['filename']

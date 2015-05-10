@@ -11,6 +11,8 @@ Lista zadan:<br>
       <li>Color: 
         <div style="width: 50px; height; color: {{ task.make_rgb }}"> 
         </div></li>
+      <li>Owner: <b> {{ task.user.username }} </b></li>
+      <li>Status: <b> {{ task.status }} </b></li>
       <br>
       <li>Registration Time: <b> {{ task.registration_time }} </b></li>
       <li>Start Time: <b> {{ task.start_time }} </b></li>
