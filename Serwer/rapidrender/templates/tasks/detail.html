@@ -15,4 +15,6 @@ Task: {{ task.id }}
   <li>Registration Time: <b> {{ task.registration_time }} </b></li>
   <li>Start Time: <b> {{ task.start_time }} </b></li>
   <li>Finish Time: <b> {{ task.finish_time }} </b></li>
+  <br>
+  <a href="{% url 'delete' task.id %}">Delete</a>
 </ul>

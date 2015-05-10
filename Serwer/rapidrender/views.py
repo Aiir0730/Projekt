@@ -17,7 +17,7 @@ import logging
 @login_required
 def index(request):
   tasks = request.user.task_set.all()
-  return render(request, 'tasks/index.html', {'tasks': tasks})
+  return render(request, 'tasks/index.html', {'tasks': tasks, 'current_user': request.user})
 
 @login_required
 def detail(request, task_id):
@@ -78,7 +78,7 @@ def delete(request, task_id):
   task = Task.objects.get(id=task_id)
   task.delete()
 
-  return HttpResponseRedirect('index')
+  return HttpResponseRedirect(reverse('index'))
 
 @login_required
 def start(request, task_id):
