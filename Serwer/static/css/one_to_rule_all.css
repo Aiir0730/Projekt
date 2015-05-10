@@ -1,0 +1,10 @@
+
+@import  url('../bower_components/bower-meyer-reset/_meyer-reset.css') ;
+@import  url('../bower_components/foundation/css/foundation.css') ;
+
+
+body 
+{
+	background-color: #303032;
+	color : #FFF ;
+}
