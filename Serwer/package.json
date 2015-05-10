@@ -1,0 +1,23 @@
+{
+  "name": "env",
+  "version": "1.0.0",
+  "description": "THis package will initialize all setting and dependencies connected with PRoject RAPID RENDER ",
+  "main": "index.js",
+  "scripts": {
+    "preinstall": "npm install --global gulp "
+  },
+  "keywords": [
+    "rapid",
+    "render",
+    "mpi",
+    "pwr"
+  ],
+  "dependencies": {},
+  "private": true,
+  "author": "Sotor SKiba Olszewski Kostrzewski Foks",
+  "license": "ISC",
+  "devDependencies": {
+    "gulp": "^3.8.11",
+    "gulp-watch": "^4.2.4"
+  }
+}
