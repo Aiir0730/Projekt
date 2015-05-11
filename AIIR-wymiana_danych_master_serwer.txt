@@ -1,0 +1,12 @@
+AIIR - wymiana danych master-serwer
+
+1. Użytkownik dodaje nowe zadanie. Po uruchomieniu akcji startującej serwer włącza u siebie aplikację ./mpi z parametrami określonymi w mainie + parametrem "task_id" (trzeba bedzie dopisac). Bedzie to identyfikator zadania.
+
+2. W celu przesłania informacji o zadaniu, np. ze statusem procentowym wykonania, mozna zrobić dwa rozwiązania.
+a) Master wysyła żądanie POST pod adres: localhost:8000/tasks/<TASK_ID>/status/
+i z parametrem progress (integer).
+b) Serwer podczas utworzenia zadania przesyła do mastera również informację o lokalizacji łącza nazwanego, do którego master będzie pisał w celu dostarczenia informacji o postępie zadania. Master będzie do tego pisał z zadaną częstotliwością a serwer automatycznie sprawdzał czy nie ma tam nic nowego.
+
+3. Jeśli zadanie się zakończy, master wysyła żądanie POST pod adres: localhost:8000/tasks/<TASK_ID>/finish/
+z plikiem wynikowym jako parametrem (Content-Type: image-gif). Nazwa parametru: result.
+(No chyba, że chcemy, żeby to Python łączył obrazki w gifa, ale wtedy mamy większe obciążenie serwera, bo wysyłamy sporo plików co jakiś czas).
