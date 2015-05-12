@@ -18,16 +18,18 @@ float MAX_Y = 7.0f;
 float ZOOM_PLUS = 0.3f;
 float ZOOM_MINUS = 0.3f;
 
+int temp;
+
 //funkcja licz¹ca normê wektora [x, y]
 float magnitude(double x, double y);
 
 //funkcja licz¹ca odcieñ piksela (px,py), depth - liczba wyrazów ci¹gu branych pod uwagê przy sprawdzaniu zbie¿noœci
-int convergence(double px, double py, int depth);
+float convergence(double px, double py, int depth);
 
 int slave(int argc, char* argv[], int worldSize)
 {
     	int y0, x0;
-	std::cout << "Slave argc: "<< argc << " argv[0]: " << argv[0] << "\n";
+	//std::cout << "Slave argc: "<< argc << " argv[0]: " << argv[0] << "\n";
 
 	if (argc != 8) return -1;
 	int taskPerThread = atoi(argv[2]);
@@ -42,7 +44,7 @@ int slave(int argc, char* argv[], int worldSize)
 
 	int tasks = (worldSize - 1) * taskPerThread; // na ile podzadañ zostanie rozbite zadanie g³ówne
 	if (tasks > y0) tasks = y0; // Zabezpieczenie przed zbyt dużą liczbą zadań
-
+	temp = tasks;
 	int rowNo = 0; // numery wierszy obecnie rozpatrywanych, przy podziale na taski, licz¹c od góry
 	int numberOfRowsPerTask = y0 / tasks;
 
@@ -79,10 +81,10 @@ int slave(int argc, char* argv[], int worldSize)
 	
 	for (;;)
 	{
-		std::cout<<"	SLAVE - wait for receive\n";
+		//std::cout<<"	SLAVE - wait for receive\n";
 		MPI_Recv(buffRecv, master2SlaveSize, MPI_PACKED, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
 		
-		std::cout<<"	SLAVE -	received MPI_TAG: "<<status.MPI_TAG<<"\n";
+		//std::cout<<"	SLAVE -	received MPI_TAG: "<<status.MPI_TAG<<"\n";
 		if (status.MPI_TAG == DIETAG)
 			return 0;
 
@@ -96,7 +98,7 @@ int slave(int argc, char* argv[], int worldSize)
 		MPI_Unpack(buffRecv, master2SlaveSize, &position, &packageMaster2Slave.colorG, 1, MPI_UNSIGNED_CHAR, MPI_COMM_WORLD);
 		MPI_Unpack(buffRecv, master2SlaveSize, &position, &packageMaster2Slave.colorB, 1, MPI_UNSIGNED_CHAR, MPI_COMM_WORLD);
 
-		std::cout<<"	SLAVE -	doMath()\n";
+		//std::cout<<"	SLAVE -	doMath()\n";
 		// for pixels to calculate -> calculate
 		doMath(x0, y0, packageMaster2Slave.depth);
 		
@@ -106,7 +108,7 @@ int slave(int argc, char* argv[], int worldSize)
 	
 		
 		// MPI_PACK response
-		std::cout<<"	SLAVE -	packing results\n";
+		//std::cout<<"	SLAVE -	packing results\n";
 		position = 0;
 		MPI_Pack(&packageSlave2Master.jobID, 1, MPI_INT, buffSend, slave2MasterSize, &position, MPI_COMM_WORLD);
 		MPI_Pack(&packageSlave2Master.ymin, 1, MPI_INT, buffSend, slave2MasterSize, &position, MPI_COMM_WORLD);
@@ -116,29 +118,11 @@ int slave(int argc, char* argv[], int worldSize)
 		MPI_Pack(packageSlave2Master.colorB, numOfPixels, MPI_UNSIGNED_CHAR, buffSend, slave2MasterSize, &position, MPI_COMM_WORLD);
 
 		// MPI_Send to master
-		std::cout<<"	SLAVE -	ready to send\n";
+		//std::cout<<"	SLAVE -	ready to send\n";
 		MPI_Send(buffSend, position, MPI_PACKED, 0, WORKTAG, MPI_COMM_WORLD);
-		std::cout<<"	SLAVE -	send\n";
+		//std::cout<<"	SLAVE -	send\n";
 	}
 
-	/*
-	// temporary rubbish, MPI_Unpack jest ok
-	//buffSend = (char*)malloc(sizeof(packageMaster2Slave));
-	sumSize = sizeof(packageMaster2Slave);
-	MPI_Recv(buffRecv, master2SlaveSize, MPI_PACKED, 0, 23, MPI_COMM_WORLD, &status);
-	position = 0;
-	MPI_Get_count(&status, MPI_PACKED, &master2SlaveSize);
-
-	MPI_Unpack(buffRecv, master2SlaveSize, &position, &packageMaster2Slave.jobID, 1, MPI_INT, MPI_COMM_WORLD);
-	MPI_Unpack(buffRecv, master2SlaveSize, &position, &packageMaster2Slave.x, 1, MPI_INT, MPI_COMM_WORLD);
-	MPI_Unpack(buffRecv, master2SlaveSize, &position, &packageMaster2Slave.ymin, 1, MPI_INT, MPI_COMM_WORLD);
-	MPI_Unpack(buffRecv, master2SlaveSize, &position, &packageMaster2Slave.ymax, 1, MPI_INT, MPI_COMM_WORLD);
-	MPI_Unpack(buffRecv, master2SlaveSize, &position, &packageMaster2Slave.depth, 1, MPI_INT, MPI_COMM_WORLD);
-	MPI_Unpack(buffRecv, master2SlaveSize, &position, &packageMaster2Slave.colorR, 1, MPI_UNSIGNED_CHAR, MPI_COMM_WORLD);
-	MPI_Unpack(buffRecv, master2SlaveSize, &position, &packageMaster2Slave.colorG, 1, MPI_UNSIGNED_CHAR, MPI_COMM_WORLD);
-	MPI_Unpack(buffRecv, master2SlaveSize, &position, &packageMaster2Slave.colorB, 1, MPI_UNSIGNED_CHAR, MPI_COMM_WORLD);
-
-	*/
 }
 
 void doMath(int x0, int y0, int depth)
@@ -166,7 +150,15 @@ void doMath(int x0, int y0, int depth)
 		j = MIN_X;
 		while (j <= MAX_X && x_pix < x0)
 		{
-			shade = (float)convergence(j, i, depth) / (float) depth;
+			//depth = 10;
+			//shade = (float)convergence(j, i, depth) / (float) depth;
+			shade = convergence(j,i,depth);
+			//std::cout<<shade<<"\n";
+			//shade = ((double)packageMaster2Slave.jobID/(double)temp);
+			//std::cout<<packageMaster2Slave.jobID<<"  "<<temp<<"  "<<shade<<"\n";
+			//std::cout<<"		shade: "<<convergence(j, i, depth)<<"   x: "<<j<<" y: "<<i<<"\n";			
+			//shade = 0.5f;
+			////std::cout<<"				"<<((y_pix-packageMaster2Slave.ymin)*x0+x_pix)<<"\n";
 			packageSlave2Master.colorR[(y_pix-packageMaster2Slave.ymin)*x0+x_pix] = shade * packageMaster2Slave.colorR;
 			packageSlave2Master.colorG[(y_pix-packageMaster2Slave.ymin)*x0+x_pix] = shade * packageMaster2Slave.colorG;
 			packageSlave2Master.colorB[(y_pix-packageMaster2Slave.ymin)*x0+x_pix] = shade * packageMaster2Slave.colorB;
@@ -180,25 +172,28 @@ void doMath(int x0, int y0, int depth)
 
 float magnitude(double x, double y)
 {
-	return sqrt(pow(x, 2.0f) + pow(y, 2.0f));
+	return sqrt(x*x + y*y);
 }
 
-int convergence(double px, double py, int depth)
+float convergence(double px, double py, int depth)
 {
-	double zx = px, zy = py;
+	//std::cout<<px<<"  "<<py<<"  "<<depth<<"\n";
+	double zx = 0, zy = 0;
 	double tempx, tempy;
-
-	for (int a = 0; a < depth; ++a)
+	for (double a = 0; a < (double)depth; ++a)
 	{
-		if (magnitude(zx, py) < 20.0f)
+		if (magnitude(zx, zy) < 20.0f)
 		{
-			tempx = pow(zx, 2.0f) - pow(zy, 2.0f) + px;
+			tempx = zx*zx - zy*zy + px;
 			tempy = 2.0f * zx * zy + py;
 			zx = tempx;
 			zy = tempy;
 		}
-		else
-			return a;
+		else{
+			//std::cout<<"\t"<<a/depth<<"  "<<a<<"  "<<depth<<"\n";
+			return a/depth;	
+		}
+			
 	}
-	return depth / 2.0f;
+	return 1;
 }

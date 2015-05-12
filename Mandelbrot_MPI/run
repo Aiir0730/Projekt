@@ -3,7 +3,7 @@
 	clear
 	make
 	#echo " mpirun -n 2 ./mpi 2 4 200 200 0 100 255"
-	var=" mpirun -n 3 ./mpi 2 4 200 200 0 100 255" 
+	var=" mpirun -n 3 ./mpi 2 30 2000 2000 0 100 255" 
 	
 	echo $var
 	$var
