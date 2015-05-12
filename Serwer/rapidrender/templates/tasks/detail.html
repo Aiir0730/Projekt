@@ -17,4 +17,7 @@ Task: {{ task.id }}
   <li>Finish Time: <b> {{ task.finish_time }} </b></li>
   <br>
   <a href="{% url 'delete' task.id %}">Delete</a>
+  <br>
+  <br>
+  <a href="{% url 'index' %}">Back to tasks list</a>
 </ul>

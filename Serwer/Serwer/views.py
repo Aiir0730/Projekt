@@ -5,11 +5,6 @@ from django.utils import timezone
 from django.http import HttpResponseRedirect, HttpResponse
 from django.core.urlresolvers import reverse
 
-
-import subprocess
-import os
-import logging
-
 # Create your views here.
 # Like Task controller
 

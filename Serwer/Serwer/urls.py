@@ -9,5 +9,4 @@ urlpatterns = patterns('',
     url(r'^admin/', include(admin.site.urls)),
     url(r'^tasks/', include('rapidrender.urls')),
     url(r'^users/', include('users.urls')),
-    url(r'^accounts/', include('allauth.urls')),
 )

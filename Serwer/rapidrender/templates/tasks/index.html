@@ -23,7 +23,10 @@ Lista zadan:<br>
   <a href="{% url 'detail' task.id %}">Show</a> | 
   <a href="{% url 'delete' task.id %}">Delete</a>
 {% endfor %}
+</ul>
 <hr>
 You are logged as {{ current_user.username }}<br>
 <a href="{%url 'logout' %}">Logout</a>
-</ul>
+<br>
+<br>
+<a href="{%url 'new' %}">New Task</a>
