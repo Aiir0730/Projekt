@@ -1,3 +1,5 @@
+#include <fcntl.h>
+#include <unistd.h>
 #include "structs.h"
 #include "bitmap_image.hpp"
 #include <mpi.h>
@@ -5,8 +7,8 @@
 #include <iostream>
 #include <cstdlib>
 
-
-
+int numTasks;
+int fifo;
 int doneTasks = 0;
 bitmap_image image;
 int master(int argc, char** argv);
@@ -19,7 +21,7 @@ int master(int argc, char** argv, int worldSize)
     int y0, x0;
 
 	//std:cout << "Master argc: " << argc << " argv[0]: " << argv[0] << "\n";
-	if (argc != 8) return -1;
+	if (argc != 9) return -1;
 	
 	packageMaster2Slave.depth = atoi(argv[1]);
 	int taskPerThread = atoi(argv[2]);
@@ -31,7 +33,8 @@ int master(int argc, char** argv, int worldSize)
 	packageMaster2Slave.colorR = (unsigned char)atoi(argv[5]);
 	packageMaster2Slave.colorG = (unsigned char)atoi(argv[6]);
 	packageMaster2Slave.colorB = (unsigned char)atoi(argv[7]);
-
+	char* outputFilename;
+	sprintf(outputFilename,"%s.bmp",argv[8]);
 	image = bitmap_image(packageMaster2Slave.x, y0);
 
 	int memberSize, msgSize;
@@ -48,7 +51,7 @@ int master(int argc, char** argv, int worldSize)
 	int rowNo = 0; // numery wierszy obecnie rozpatrywanych, przy podziale na taski
 	int numberOfRowsPerTask = y0 / tasks;
 	tasks = ceil(y0/numberOfRowsPerTask); // psotor - prosty sposob zeby policzyc tyle taskow by bylo ok
-	
+	numTasks = tasks;
 	//std:cout<<"numberOfRowsPerTask: "<<numberOfRowsPerTask<<"\n";
 	//std:cout<<"tasks: "<<tasks<<"\n";	
 
@@ -58,6 +61,10 @@ int master(int argc, char** argv, int worldSize)
 	MPI_Status status;
 
 	int numOfPixels = numberOfRowsPerTask * x0;
+
+	
+	fifo = open(outputFilename,O_WRONLY);
+
 	//std:cout<<"numOfPixels: "<<numOfPixels<<"\n";
 	//MPI_Init(&argc, &argv);
     	//MPI_Comm_size(MPI_COMM_WORLD, &worldSize);
@@ -193,7 +200,8 @@ int master(int argc, char** argv, int worldSize)
 		//std:cout<<"	MASTER - step 4 - sending DIETAG\n";
 		MPI_Send(0, 0, MPI_PACKED, rank, DIETAG, MPI_COMM_WORLD);
 	}
-	image.save_image("output_file.bmp");
+	image.save_image(outputFilename);
+	close(fifo);
 }
 
 void doNiceStuff(int x0, int y0, int ymin, int ymax)
@@ -214,6 +222,8 @@ void doNiceStuff(int x0, int y0, int ymin, int ymax)
 			image.set_pixel(j,i,r,g,b);
 		}
 	}
+	float progress = (float)doneTasks/(float)numTasks;
+	write(fifo,&progress,sizeof(progress));
 }
 
 
