@@ -23,4 +23,4 @@ class Task(models.Model):
 
   @property
   def make_rgb(self):
-    return "0x%x%x%x" % (self.colorR, self.colorG, self.colorB)
+    return "#%x%x%x" % (self.colorR, self.colorG, self.colorB)

@@ -83,16 +83,21 @@ def delete(request, task_id):
 @login_required
 def start(request, task_id):
   task = Task.objects.get(id=task_id)
-  #filename = request.GET['filename']
+
   mpipath = os.path.dirname(os.path.realpath(__file__)) + '/../../Mandelbrot_MPI/mpi'
   filename = 'mpirun'
   arg1 = '-n'
   arg2 = '5'
   arg3 = mpipath
-  #arg1 = '-n 5'
-  #arg2 = task_id
+  arg4 = task.depth
+  arg5 = task.taskPerThread
+  arg6 = task.x
+  arg7 = task.y
+  arg8 = task.colorR
+  arg9 = task.colorG
+  arg10 = task.colorB
 
-  subprocess.call([filename, arg1, arg2, arg3]) 
+  subprocess.call([filename, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10]) 
   #logger = logging.getLogger(__name__)
   #logger.error(filename)
 
