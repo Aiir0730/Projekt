@@ -96,7 +96,10 @@ def start(request, task_id):
   #logger = logging.getLogger(__name__)
   #logger.error(filename)
 
-  return HttpResponseRedirect(reverse('index'))
+  task.status = "At work"
+  task.save()
+
+  return HttpResponseRedirect(reverse('detail', args=(task.id,)))
 
 ###private###
 

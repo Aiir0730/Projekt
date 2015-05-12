@@ -16,7 +16,9 @@ Task: {{ task.id }}
   <li>Start Time: <b> {{ task.start_time }} </b></li>
   <li>Finish Time: <b> {{ task.finish_time }} </b></li>
   <br>
+  {% if task.status != 'At work' %}
   <a href="{% url 'delete' task.id %}">Delete</a>
+  {% endif %}
   <br>
   <br>
   <a href="{% url 'index' %}">Back to tasks list</a>
