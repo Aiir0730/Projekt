@@ -1,14 +1,15 @@
-#include <fcntl.h>
-#include <unistd.h>
 #include "structs.h"
 #include "bitmap_image.hpp"
 #include <mpi.h>
 #include <cmath>
 #include <iostream>
 #include <cstdlib>
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/stat.h>
 
-int numTasks;
-int fifo;
+int numOfTasks;
+int fifo_handler;
 int doneTasks = 0;
 bitmap_image image;
 int master(int argc, char** argv);
@@ -33,9 +34,16 @@ int master(int argc, char** argv, int worldSize)
 	packageMaster2Slave.colorR = (unsigned char)atoi(argv[5]);
 	packageMaster2Slave.colorG = (unsigned char)atoi(argv[6]);
 	packageMaster2Slave.colorB = (unsigned char)atoi(argv[7]);
-	char* outputFilename;
-	sprintf(outputFilename,"%s.bmp",argv[8]);
+
 	image = bitmap_image(packageMaster2Slave.x, y0);
+	char filename[50];
+	char fifoname[50];
+	printf("lol: %s\n",argv[8]);
+	sprintf(filename,"%s.bmp", argv[8]);
+	sprintf(fifoname,"%s",argv[8]);
+
+	fifo_handler = open(fifoname,O_WRONLY);
+	std::cout<<"fifo_handler: "<<fifo_handler<<"\n";
 
 	int memberSize, msgSize;
 	int master2SlaveSize = 0;
@@ -50,8 +58,9 @@ int master(int argc, char** argv, int worldSize)
 
 	int rowNo = 0; // numery wierszy obecnie rozpatrywanych, przy podziale na taski
 	int numberOfRowsPerTask = y0 / tasks;
-	tasks = ceil(y0/numberOfRowsPerTask); // psotor - prosty sposob zeby policzyc tyle taskow by bylo ok
-	numTasks = tasks;
+	tasks = ceil((double)y0/(double)numberOfRowsPerTask); // psotor - prosty sposob zeby policzyc tyle taskow by bylo ok
+	numOfTasks = tasks;
+	write(fifo_handler,&tasks,sizeof(tasks));
 	//std:cout<<"numberOfRowsPerTask: "<<numberOfRowsPerTask<<"\n";
 	//std:cout<<"tasks: "<<tasks<<"\n";	
 
@@ -61,10 +70,6 @@ int master(int argc, char** argv, int worldSize)
 	MPI_Status status;
 
 	int numOfPixels = numberOfRowsPerTask * x0;
-
-	
-	fifo = open(outputFilename,O_WRONLY);
-
 	//std:cout<<"numOfPixels: "<<numOfPixels<<"\n";
 	//MPI_Init(&argc, &argv);
     	//MPI_Comm_size(MPI_COMM_WORLD, &worldSize);
@@ -200,8 +205,8 @@ int master(int argc, char** argv, int worldSize)
 		//std:cout<<"	MASTER - step 4 - sending DIETAG\n";
 		MPI_Send(0, 0, MPI_PACKED, rank, DIETAG, MPI_COMM_WORLD);
 	}
-	image.save_image(outputFilename);
-	close(fifo);
+	close(fifo_handler);
+	image.save_image(filename);
 }
 
 void doNiceStuff(int x0, int y0, int ymin, int ymax)
@@ -222,8 +227,8 @@ void doNiceStuff(int x0, int y0, int ymin, int ymax)
 			image.set_pixel(j,i,r,g,b);
 		}
 	}
-	float progress = (float)doneTasks/(float)numTasks;
-	write(fifo,&progress,sizeof(progress));
+	//float progress = (float)doneTasks/(float)numOfTasks;
+	write(fifo_handler,&doneTasks,sizeof(doneTasks));
 }
 
 

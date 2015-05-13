@@ -3,7 +3,8 @@
 #include <mpi.h>
 #include <cmath>
 #include <cstdlib>
-
+#include <fcntl.h>
+#include <unistd.h>
 
 
 int slave(int argc, char* argv[]);
@@ -31,7 +32,7 @@ int slave(int argc, char* argv[], int worldSize)
     	int y0, x0;
 	//std::cout << "Slave argc: "<< argc << " argv[0]: " << argv[0] << "\n";
 
-	if (argc != 8) return -1;
+	if (argc != 9) return -1;
 	int taskPerThread = atoi(argv[2]);
 	packageMaster2Slave.x = atoi(argv[3]);
 	x0 = atoi(argv[3]);
@@ -152,9 +153,9 @@ void doMath(int x0, int y0, int depth)
 		{
 			//depth = 10;
 			//shade = (float)convergence(j, i, depth) / (float) depth;
-			shade = convergence(j,i,depth);
+			//shade = convergence(j,i,depth);
 			//std::cout<<shade<<"\n";
-			//shade = ((double)packageMaster2Slave.jobID/(double)temp);
+			shade = ((double)packageMaster2Slave.jobID/(double)temp);
 			//std::cout<<packageMaster2Slave.jobID<<"  "<<temp<<"  "<<shade<<"\n";
 			//std::cout<<"		shade: "<<convergence(j, i, depth)<<"   x: "<<j<<" y: "<<i<<"\n";			
 			//shade = 0.5f;
@@ -172,7 +173,7 @@ void doMath(int x0, int y0, int depth)
 
 float magnitude(double x, double y)
 {
-	return sqrt(x*x + y*y);
+	return pow(pow(x,2) + pow(y,2),0.5);
 }
 
 float convergence(double px, double py, int depth)
