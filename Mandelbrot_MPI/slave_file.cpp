@@ -12,10 +12,10 @@ void packSlave();
 void unpackSlave();
 void doMath(int x0, int y0, int depth);
 
-float MIN_X = -7.0f;
-float MAX_X = 7.0f;
-float MIN_Y = -7.0f;
-float MAX_Y = 7.0f;
+float MIN_X = -3.0f;
+float MAX_X = 3.0f;
+float MIN_Y = -3.0f;
+float MAX_Y = 3.0f;
 float ZOOM_PLUS = 0.3f;
 float ZOOM_MINUS = 0.3f;
 
@@ -121,20 +121,21 @@ int slave(int argc, char* argv[], int worldSize)
 		// MPI_Send to master
 		//std::cout<<"	SLAVE -	ready to send\n";
 		MPI_Send(buffSend, position, MPI_PACKED, 0, WORKTAG, MPI_COMM_WORLD);
-		//std::cout<<"	SLAVE -	send\n";
+		//std::cout<<"	SLAVE -	sent\n";
 	}
 
 }
 
+
 void doMath(int x0, int y0, int depth)
 {
-	double i = MIN_X, j, temp_MAX_Y;
+	double i, j, temp_MAX_Y;
 	float shade;
 	double  step;
 	int x_pix;
 	int y_pix;
 
-	j = MIN_Y + (MAX_Y-MIN_Y)*packageMaster2Slave.ymin/y0;
+	i = MIN_Y + (MAX_Y-MIN_Y)*packageMaster2Slave.ymin/y0;
 	temp_MAX_Y = MIN_Y + (MAX_Y-MIN_Y)*packageMaster2Slave.ymax/y0;
 
 
@@ -144,22 +145,16 @@ void doMath(int x0, int y0, int depth)
 		step = (MAX_Y - MIN_Y) / y0;
 
 	y_pix = packageMaster2Slave.ymin;
-
+	//std::cout<<"temp_MAX_Y: "<<temp_MAX_Y<<"\n";
 	while (i <= temp_MAX_Y && y_pix < packageMaster2Slave.ymax)
 	{
 		x_pix = 0;
 		j = MIN_X;
 		while (j <= MAX_X && x_pix < x0)
 		{
-			//depth = 10;
-			//shade = (float)convergence(j, i, depth) / (float) depth;
-			//shade = convergence(j,i,depth);
-			//std::cout<<shade<<"\n";
-			shade = ((double)packageMaster2Slave.jobID/(double)temp);
-			//std::cout<<packageMaster2Slave.jobID<<"  "<<temp<<"  "<<shade<<"\n";
-			//std::cout<<"		shade: "<<convergence(j, i, depth)<<"   x: "<<j<<" y: "<<i<<"\n";			
-			//shade = 0.5f;
-			////std::cout<<"				"<<((y_pix-packageMaster2Slave.ymin)*x0+x_pix)<<"\n";
+			
+			shade = convergence(j,i,depth);
+
 			packageSlave2Master.colorR[(y_pix-packageMaster2Slave.ymin)*x0+x_pix] = shade * packageMaster2Slave.colorR;
 			packageSlave2Master.colorG[(y_pix-packageMaster2Slave.ymin)*x0+x_pix] = shade * packageMaster2Slave.colorG;
 			packageSlave2Master.colorB[(y_pix-packageMaster2Slave.ymin)*x0+x_pix] = shade * packageMaster2Slave.colorB;
@@ -168,8 +163,10 @@ void doMath(int x0, int y0, int depth)
 		}
 		i += step;
 		++y_pix;
+		//std::cout<<"y_pix: "<<y_pix<<"  i: "<<i<<"\n";
 	}
 }
+
 
 float magnitude(double x, double y)
 {
@@ -183,6 +180,9 @@ float convergence(double px, double py, int depth)
 	double tempx, tempy;
 	for (double a = 0; a < (double)depth; ++a)
 	{
+
+		//if (py > -0.5 && py < 0.5)
+		//std::cout<<"a: "<<a<<"  zx: "<<zx<<"  zy: "<<zy<<"  px: "<<px<<"  py: "<<py<<"\n";
 		if (magnitude(zx, zy) < 20.0f)
 		{
 			tempx = zx*zx - zy*zy + px;
