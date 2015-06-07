@@ -38,6 +38,33 @@ int slave(int argc, char* argv[], int worldSize)
 	x0 = atoi(argv[3]);
 	y0 = atoi(argv[4]);
 
+	float XX = MAX_X - MIN_X;
+	float YY = MAX_Y - MIN_Y;
+	float delta;
+	if (x0 > y0)
+	{
+		std::cout<<"lol\n";
+		delta = (x0-y0)/(float)x0 * YY;
+		std::cout<<"delta: "<<delta<<"  YY: "<<YY<<" a: "<<abs(MIN_Y/YY)*delta<<"  b: "<<abs(MIN_Y/YY)<<" c: "<<(abs(MIN_Y/YY)*delta)<<"\n";
+		if (MIN_Y/YY < 0) delta = -delta; // taki straszny workaround, bo nie wiem dlaczego abs(MIN_Y/YY) zwraca 0
+		MIN_Y = MIN_Y + (MIN_Y/YY)*delta;
+		if (MAX_Y/YY > 0) delta = -delta;
+		MAX_Y = MAX_Y - (MAX_Y/YY)*delta;
+	}
+	else
+	{
+		std::cout<<"lol2\n";
+		delta = (y0-x0)/(float)y0 * XX;
+		if (MIN_X/XX < 0) delta = -delta;
+		MIN_X = MIN_X + abs(MIN_X/XX)*delta;
+		if (MAX_X/XX > 0) delta = -delta;
+		MAX_X = MAX_X - abs(MAX_X/XX)*delta;
+	}
+
+	std::cout<<"MIN_X: "<<MIN_X<<"  MAX_X: "<<MAX_X<<"\n";
+	std::cout<<"MIN_Y: "<<MIN_Y<<"  MAX_Y: "<<MAX_Y<<"\n";
+
+
 	int memberSize;
 	int master2SlaveSize = 0;
 	int slave2MasterSize = 0;
