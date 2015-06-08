@@ -43,6 +43,7 @@ int master(int argc, char** argv, int worldSize)
 
 	// sprintf(fifoname,"%s",argv[8]);
 
+
 	// fifo_handler = open(fifoname,O_WRONLY);
 	// //std::cout<<"fifo_handler: "<<fifo_handler<<"\n";
 
