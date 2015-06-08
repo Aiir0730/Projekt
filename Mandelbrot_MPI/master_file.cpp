@@ -7,18 +7,53 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/stat.h>
+#include <netinet/in.h> 
+#include <stdio.h> 
+#include <sys/types.h> 
+#include <sys/socket.h> 
+#include <string.h>
+#include <arpa/inet.h>
+
+const int KROKI = 10;
+const int PORT = 9999;
+#define SRV_IP "127.0.0.1"
+
+struct msgt
+{
+	int task_id;
+	int progress;
+	bool is_done;
+};
 
 int numOfTasks;
 int fifo_handler;
 int doneTasks = 0;
 bitmap_image image;
 int master(int argc, char** argv);
+
+sockaddr_in adr_moj, adr_serw, adr_x; 
+int s, i, slen = sizeof(adr_serw), snd, blen = sizeof(msgt), rec;
+msgt msg;
+
 void packMaster();
 void unpackMaster();
 void doNiceStuff(int x0, int y0, int ymin, int ymax);
+void blad(char *s);
 
 int master(int argc, char** argv, int worldSize)
 {
+	s = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+	if(s < 0) blad("socket"); 
+	printf("Gniazdko %d utworzone\n", s); 
+	memset((char *) &adr_serw, 0, sizeof(adr_serw)); 
+	adr_serw.sin_family = AF_INET; 
+	adr_serw.sin_port = htons(PORT); 
+	if (inet_aton(SRV_IP, &adr_serw.sin_addr) == 0)	// Tu zmienione z argv[1] na SRV_IP
+	{ 
+		fprintf(stderr, "inet_aton() failed\n"); 
+		_exit(1); 
+	}
+
     int y0, x0;
 
 	////std::cout << "Master argc: " << argc << " argv[0]: " << argv[0] << "\n";
@@ -209,11 +244,12 @@ int master(int argc, char** argv, int worldSize)
 	}
 	// close(fifo_handler);
 	image.save_image(filename);
+	close(s); 
 }
 
 void doNiceStuff(int x0, int y0, int ymin, int ymax)
 {
-	//++doneTasks;
+	static int done_tasks = 0;
 	unsigned int i, j;
 	unsigned char r, g, b;
 	////std::cout<<"	MASTER - doNiceStuff() - ymin: "<<ymin<<" ymax: "<<ymax<<"\n";
@@ -229,29 +265,17 @@ void doNiceStuff(int x0, int y0, int ymin, int ymax)
 			image.set_pixel(j,i,r,g,b);
 		}
 	}
-	//float progress = (float)doneTasks/(float)numOfTasks;
-	// write(fifo_handler,&doneTasks,sizeof(doneTasks));
+	++done_tasks;
+	msg.task_id = done_tasks;
+	msg.progress = (done_tasks * 100)/numOfTasks;
+	if (done_tasks == numOfTasks) msg.is_done = true;
+	else msg.is_done = false;
+	snd = sendto(s, &msg, blen, 0,(struct sockaddr *) &adr_serw, (socklen_t) slen);
+	if(snd < 0) blad("sendto()"); 
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+ 
+void blad(char *s)
+{ 
+	perror(s); 
+	_exit(1); 
+}
