@@ -5,38 +5,78 @@
 #include <cstdlib>
 #include <fcntl.h>
 #include <unistd.h>
-
+#define MANDELBROT 1
+#define JULIA 2
 
 int slave(int argc, char* argv[]);
 void packSlave();
 void unpackSlave();
 void doMath(int x0, int y0, int depth);
 
-float MIN_X = -7.0f;
-float MAX_X = 7.0f;
-float MIN_Y = -7.0f;
-float MAX_Y = 7.0f;
+float MIN_X = -3.0f;
+float MAX_X = 3.0f;
+float MIN_Y = -3.0f;
+float MAX_Y = 3.0f;
 float ZOOM_PLUS = 0.3f;
 float ZOOM_MINUS = 0.3f;
 
+int fraktal;
 int temp;
+float cx;
+float cy;
 
 //funkcja licz¹ca normê wektora [x, y]
 float magnitude(double x, double y);
 
 //funkcja licz¹ca odcieñ piksela (px,py), depth - liczba wyrazów ci¹gu branych pod uwagê przy sprawdzaniu zbie¿noœci
-float convergence(double px, double py, int depth);
+float convergenceMandelbrot(double px, double py, int depth);
+float convergenceJulia(double px, double py, int depth);
 
 int slave(int argc, char* argv[], int worldSize)
 {
     	int y0, x0;
 	//std::cout << "Slave argc: "<< argc << " argv[0]: " << argv[0] << "\n";
 
-	if (argc != 9) return -1;
+	if (argc != 12) return -1;
 	int taskPerThread = atoi(argv[2]);
 	packageMaster2Slave.x = atoi(argv[3]);
 	x0 = atoi(argv[3]);
 	y0 = atoi(argv[4]);
+	
+	fraktal = atoi(argv[9]);
+	if (fraktal != 1 && fraktal != 2)
+		return -1;
+	cx = atof(argv[10]);
+	cy = atof(argv[11]);
+
+
+	
+	float XX = MAX_X - MIN_X;
+	float YY = MAX_Y - MIN_Y;
+	float delta;
+	if (x0 > y0)
+	{
+		//std::cout<<"lol\n";
+		delta = (x0-y0)/(float)x0 * YY;
+		//std::cout<<"delta: "<<delta<<"  YY: "<<YY<<" a: "<<abs(MIN_Y/YY)*delta<<"  b: "<<abs(MIN_Y/YY)<<" c: "<<(abs(MIN_Y/YY)*delta)<<"\n";
+		if (MIN_Y/YY < 0) delta = -delta; // taki straszny workaround, bo nie wiem dlaczego abs(MIN_Y/YY) zwraca 0
+		MIN_Y = MIN_Y + (MIN_Y/YY)*delta;
+		if (MAX_Y/YY > 0) delta = -delta;
+		MAX_Y = MAX_Y - (MAX_Y/YY)*delta;
+	}
+	else
+	{
+		//std::cout<<"lol2\n";
+		delta = (y0-x0)/(float)y0 * XX;
+		if (MIN_X/XX < 0) delta = -delta;
+		MIN_X = MIN_X + abs(MIN_X/XX)*delta;
+		if (MAX_X/XX > 0) delta = -delta;
+		MAX_X = MAX_X - abs(MAX_X/XX)*delta;
+	}
+
+	//std::cout<<"MIN_X: "<<MIN_X<<"  MAX_X: "<<MAX_X<<"\n";
+	//std::cout<<"MIN_Y: "<<MIN_Y<<"  MAX_Y: "<<MAX_Y<<"\n";
+
 
 	int memberSize;
 	int master2SlaveSize = 0;
@@ -82,10 +122,10 @@ int slave(int argc, char* argv[], int worldSize)
 	
 	for (;;)
 	{
-		//std::cout<<"	SLAVE - wait for receive\n";
+		////std::cout<<"	SLAVE - wait for receive\n";
 		MPI_Recv(buffRecv, master2SlaveSize, MPI_PACKED, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
 		
-		//std::cout<<"	SLAVE -	received MPI_TAG: "<<status.MPI_TAG<<"\n";
+		////std::cout<<"	SLAVE -	received MPI_TAG: "<<status.MPI_TAG<<"\n";
 		if (status.MPI_TAG == DIETAG)
 			return 0;
 
@@ -99,7 +139,7 @@ int slave(int argc, char* argv[], int worldSize)
 		MPI_Unpack(buffRecv, master2SlaveSize, &position, &packageMaster2Slave.colorG, 1, MPI_UNSIGNED_CHAR, MPI_COMM_WORLD);
 		MPI_Unpack(buffRecv, master2SlaveSize, &position, &packageMaster2Slave.colorB, 1, MPI_UNSIGNED_CHAR, MPI_COMM_WORLD);
 
-		//std::cout<<"	SLAVE -	doMath()\n";
+		////std::cout<<"	SLAVE -	doMath()\n";
 		// for pixels to calculate -> calculate
 		doMath(x0, y0, packageMaster2Slave.depth);
 		
@@ -109,7 +149,7 @@ int slave(int argc, char* argv[], int worldSize)
 	
 		
 		// MPI_PACK response
-		//std::cout<<"	SLAVE -	packing results\n";
+		////std::cout<<"	SLAVE -	packing results\n";
 		position = 0;
 		MPI_Pack(&packageSlave2Master.jobID, 1, MPI_INT, buffSend, slave2MasterSize, &position, MPI_COMM_WORLD);
 		MPI_Pack(&packageSlave2Master.ymin, 1, MPI_INT, buffSend, slave2MasterSize, &position, MPI_COMM_WORLD);
@@ -119,22 +159,23 @@ int slave(int argc, char* argv[], int worldSize)
 		MPI_Pack(packageSlave2Master.colorB, numOfPixels, MPI_UNSIGNED_CHAR, buffSend, slave2MasterSize, &position, MPI_COMM_WORLD);
 
 		// MPI_Send to master
-		//std::cout<<"	SLAVE -	ready to send\n";
+		////std::cout<<"	SLAVE -	ready to send\n";
 		MPI_Send(buffSend, position, MPI_PACKED, 0, WORKTAG, MPI_COMM_WORLD);
-		//std::cout<<"	SLAVE -	send\n";
+		////std::cout<<"	SLAVE -	sent\n";
 	}
 
 }
 
+
 void doMath(int x0, int y0, int depth)
 {
-	double i = MIN_X, j, temp_MAX_Y;
+	double i, j, temp_MAX_Y;
 	float shade;
 	double  step;
 	int x_pix;
 	int y_pix;
 
-	j = MIN_Y + (MAX_Y-MIN_Y)*packageMaster2Slave.ymin/y0;
+	i = MIN_Y + (MAX_Y-MIN_Y)*packageMaster2Slave.ymin/y0;
 	temp_MAX_Y = MIN_Y + (MAX_Y-MIN_Y)*packageMaster2Slave.ymax/y0;
 
 
@@ -144,22 +185,19 @@ void doMath(int x0, int y0, int depth)
 		step = (MAX_Y - MIN_Y) / y0;
 
 	y_pix = packageMaster2Slave.ymin;
-
+	////std::cout<<"temp_MAX_Y: "<<temp_MAX_Y<<"\n";
 	while (i <= temp_MAX_Y && y_pix < packageMaster2Slave.ymax)
 	{
 		x_pix = 0;
 		j = MIN_X;
 		while (j <= MAX_X && x_pix < x0)
 		{
-			//depth = 10;
-			//shade = (float)convergence(j, i, depth) / (float) depth;
-			//shade = convergence(j,i,depth);
-			//std::cout<<shade<<"\n";
-			shade = ((double)packageMaster2Slave.jobID/(double)temp);
-			//std::cout<<packageMaster2Slave.jobID<<"  "<<temp<<"  "<<shade<<"\n";
-			//std::cout<<"		shade: "<<convergence(j, i, depth)<<"   x: "<<j<<" y: "<<i<<"\n";			
-			//shade = 0.5f;
-			////std::cout<<"				"<<((y_pix-packageMaster2Slave.ymin)*x0+x_pix)<<"\n";
+			if (fraktal == MANDELBROT)
+				shade = convergenceMandelbrot(j,i,depth);
+			else if (fraktal == JULIA)
+				shade = convergenceJulia(j,i,depth);
+
+
 			packageSlave2Master.colorR[(y_pix-packageMaster2Slave.ymin)*x0+x_pix] = shade * packageMaster2Slave.colorR;
 			packageSlave2Master.colorG[(y_pix-packageMaster2Slave.ymin)*x0+x_pix] = shade * packageMaster2Slave.colorG;
 			packageSlave2Master.colorB[(y_pix-packageMaster2Slave.ymin)*x0+x_pix] = shade * packageMaster2Slave.colorB;
@@ -168,21 +206,52 @@ void doMath(int x0, int y0, int depth)
 		}
 		i += step;
 		++y_pix;
+		////std::cout<<"y_pix: "<<y_pix<<"  i: "<<i<<"\n";
 	}
 }
+
 
 float magnitude(double x, double y)
 {
 	return pow(pow(x,2) + pow(y,2),0.5);
 }
 
-float convergence(double px, double py, int depth)
+float convergenceJulia(double px, double py, int depth)
 {
-	//std::cout<<px<<"  "<<py<<"  "<<depth<<"\n";
+	////std::cout<<px<<"  "<<py<<"  "<<depth<<"\n";
+	double zx = px, zy = py;
+	double tempx, tempy;
+	for (double a = 0; a < (double)depth; ++a)
+	{
+
+		//if (py > -0.5 && py < 0.5)
+		////std::cout<<"a: "<<a<<"  zx: "<<zx<<"  zy: "<<zy<<"  px: "<<px<<"  py: "<<py<<"\n";
+		if (magnitude(zx, zy) < 2.0f)
+		{
+			tempx = zx*zx - zy*zy + cx;
+			tempy = 2.0f * zx * zy + cy;
+			zx = tempx;
+			zy = tempy;
+		}
+		else{
+			////std::cout<<"\t"<<a/depth<<"  "<<a<<"  "<<depth<<"\n";
+			return a/depth;	
+		}
+			
+	}
+	return 1;
+}
+
+float convergenceMandelbrot(double px, double py, int depth)
+{
+	////std::cout<<px<<"  "<<py<<"  "<<depth<<"\n";
 	double zx = 0, zy = 0;
 	double tempx, tempy;
 	for (double a = 0; a < (double)depth; ++a)
 	{
+
+		//if (py > -0.5 && py < 0.5)
+		////std::cout<<"a: "<<a<<"  zx: "<<zx<<"  zy: "<<zy<<"  px: "<<px<<"  py: "<<py<<"\n";
 		if (magnitude(zx, zy) < 20.0f)
 		{
 			tempx = zx*zx - zy*zy + px;
@@ -191,7 +260,7 @@ float convergence(double px, double py, int depth)
 			zy = tempy;
 		}
 		else{
-			//std::cout<<"\t"<<a/depth<<"  "<<a<<"  "<<depth<<"\n";
+			////std::cout<<"\t"<<a/depth<<"  "<<a<<"  "<<depth<<"\n";
 			return a/depth;	
 		}
 			
