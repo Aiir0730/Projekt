@@ -1,0 +1,55 @@
+{% if task.status == 'At work' %}
+  <script type="text/javascript"> 
+    var progress_bar = document.getElementById("progress_var");
+
+    setTimeout(function() {
+         $.ajax({ url: "localhost:8000/tasks/{{task.id}}/status/", success: function(data) {
+
+              if (data.value == "-1")
+              {
+                document.location.href = "localhost:8000/tasks/{{task.id}}/finish/";
+              }
+
+              progress_bar.innerHTML=data.value;
+         }, dataType: "text", complete: poll });
+      }, 30);
+  </script>
+{% endif %}
+
+Task: {{ task.id }}
+<br>
+
+<ul>
+  <li>Depth: <b> {{ task.depth }} </b></li>
+  <li>X: <b> {{ task.x }} </b></li>
+  <li>Y: <b> {{ task.y }} </b></li>
+  <li>Task per thread: <b> {{ task.taskPerThread }} </b></li>
+  <li>Color: 
+    <div style="width: 50px; height: 20px; background-color: rgb({{ task.colorR }}, {{ task.colorG }} , {{ task.colorB }});">  
+    </div></li>
+  <li>Owner: <b> {{ task.user.username }} </b></li>
+  <li>Status: <b> {{ task.status }} </b></li>
+  <br>
+  {% if task.status == 'At work' %}
+  <li>Progress: <b> <span id="progress_var">0</span> </b> </li>
+  {% endif %}
+  <br>
+  <li>Registration Time: <b> {{ task.registration_time }} </b></li>
+  <li>Start Time: <b> {{ task.start_time }} </b></li>
+  <li>Finish Time: <b> {{ task.finish_time }} </b></li>
+  <br>
+
+  {% if task.status != 'At work' %}
+  <a href="{% url 'delete' task.id %}">Delete</a>
+  {% endif %}
+  {% if task.status == 'Registered' %}
+  <br>
+  <a href="{% url 'start' task.id %}">START!</a>
+  {% endif %}
+  <br>
+  <a href="{% url 'reset' task.id %}">Reset</a>
+  
+  <br>
+  <br>
+  <a href="{% url 'index' %}">Back to tasks list</a>
+</ul>

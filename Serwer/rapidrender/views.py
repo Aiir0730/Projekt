@@ -22,6 +22,15 @@ def index(request):
 @login_required
 def detail(request, task_id):
   task = Task.objects.get(id=task_id)
+
+  path = os.path.dirname(os.path.realpath(__file__)) + '/../' + task_id + '.bmp'
+  destpath = os.path.dirname(os.path.realpath(__file__)) + '/../static/img/' + task_id + '.bmp'
+  if task.status == 'At work' and os.path.isfile(path):
+    os.rename(path, destpath)
+    task.status = "Finished"
+    task.finish_time = timezone.now()
+    task.save()
+
   return render(request, 'tasks/detail.html', {'task': task})
 
 @login_required
@@ -84,24 +93,67 @@ def delete(request, task_id):
 def start(request, task_id):
   task = Task.objects.get(id=task_id)
 
+  #fifo create
+  path = os.path.dirname(os.path.realpath(__file__)) + '/../../Mandelbrot_MPI/' + task_id + '.txt'
+  #os.mkfifo(path)
+  #create file
+  #file = os.fdopen(os.open(path, os.O_WRONLY | os.O_CREAT, 0o666), 'w')
+  #file = open(path, 'w')
+  #os.chmod(path, 0o666)
+  #logger = logging.getLogger(__name__)
+  #logger.error(file)
+  #file.close()
+
   mpipath = os.path.dirname(os.path.realpath(__file__)) + '/../../Mandelbrot_MPI/mpi'
   filename = 'mpirun'
   arg1 = '-n'
   arg2 = '5'
-  arg3 = mpipath
-  arg4 = task.depth
-  arg5 = task.taskPerThread
-  arg6 = task.x
-  arg7 = task.y
-  arg8 = task.colorR
-  arg9 = task.colorG
-  arg10 = task.colorB
+  arg3 = str(mpipath)
+  arg4 = str(task.depth)
+  arg5 = str(task.taskPerThread)
+  arg6 = str(task.x)
+  arg7 = str(task.y)
+  arg8 = str(task.colorR)
+  arg9 = str(task.colorG)
+  arg10 = str(task.colorB)
+  arg_id = str(task_id)
 
-  subprocess.call([filename, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10]) 
+  subprocess.call([filename, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg_id]) 
   #logger = logging.getLogger(__name__)
   #logger.error(filename)
 
   task.status = "At work"
+  task.start_time = timezone.now()
+  task.save()
+
+  return HttpResponseRedirect(reverse('detail', args=(task.id,)))
+
+def status(request, task_id):
+  path = os.path.dirname(os.path.realpath(__file__)) + '/../../Mandelbrot_MPI/' + task_id + '.txt'
+  fifo = open(path, 'r+')
+  info = fifo.read()
+  #fifo.write(info)
+  fifo.close()
+
+  return HttpResponse(info, content_type='text/plain')
+
+def finish(request, task_id):
+  task = Task.objects.get(id=task_id)
+  task.finish_time = timezone.now()
+  task.status = "Finished"
+  task.save()
+
+  path = os.path.dirname(os.path.realpath(__file__)) + '/../../Mandelbrot_MPI/' + task_id + '.txt'
+  os.remove(path) #remove fifo
+
+  #copy imagefile to statics
+
+  return HttpResponseRedirect(reverse('detail', args=(task.id,)))
+
+@login_required
+def reset(request, task_id):
+  task = Task.objects.get(id=task_id)
+  task.status = "Registered"
   task.save()
 
   return HttpResponseRedirect(reverse('detail', args=(task.id,)))

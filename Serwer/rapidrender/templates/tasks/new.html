@@ -1,22 +1,48 @@
-<h1>Create a new task</h1>
+{% extends "base_generic_rapid.html" %}
 
-<form action="{% url 'create' %}" method="POST">
-  {% csrf_token %}
+{% block menu %}
+<li><a href="/">Home</a></li>
+<li><a href="/tasks">Lista zadań</a></li>
+<li class="active"><a href="/tasks/new"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span> Nowe zadanie</a></li>
 
-  <label for="depth">Depth:</label>
-  <input type="text" name="depth" id="depth" value="" /><br>
+{% endblock %}
 
-  <label for="x">X:</label>
-  <input type="text" name="x" id="x" value="" /><br>
+{% block content %}
+    <div class="row">
+        <div class="col-xs-4 col-xs-offset-4">
 
-  <label for="y">Y:</label>
-  <input type="text" name="y" id="y" value="" /><br>
+		<form class="form" action="{% url 'create' %}" method="POST">
+			{% csrf_token %}
 
-  <label for="taskPerThread">Task Per Thread:</label>
-  <input type="text" name="taskPerThread" id="taskPerThread" value="" /><br>
+			<div class="form-group">
+			  <label for="depth">Głębokość:</label>
+			  <input type="number" class="form-control" name="depth" id="depth" value="" />
+			</div>
+			<div class="form-group">
+			  <label for="x">X:</label>
+			  <input type="number" class="form-control" name="x" id="x" value="" />
+			</div>
+			<div class="form-group">
+			  <label for="y">Y:</label>
+			  <input type="number" class="form-control" name="y" id="y" value="" />
+			</div>
+			<div class="form-group">
+			  <label for="taskPerThread">Zadań na wątek:</label>
+			  <input type="number" class="form-control" name="taskPerThread" id="taskPerThread" value="" />
+			</div>
+			<div class="form-group">
+			  <label for="color">Kolor:</label>
+			  <input type="color" class="form-control" name="color" id="color" />
+			</div>		
+			
 
-  <label for="color">Color:</label>
-  <input type="color" name="color" id="color" /><br>
-
-  <input type="submit" value="Dodaj!" />
-</form>
+			<div class="col-xs-10 col-xs-offset-2">
+				<button type="submit" class="btn btn-primary">Dodaj</button>
+				<button type="reset" class="btn btn-default">Reset</button>			
+			</div>
+			
+		</form>		
+		
+        </div>
+    </div>
+{% endblock %}

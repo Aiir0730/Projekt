@@ -40,9 +40,9 @@ int master(int argc, char** argv, int worldSize)
 	char fifoname[50];
 	printf("lol: %s\n",argv[8]);
 	sprintf(filename,"%s.bmp", argv[8]);
-	sprintf(fifoname,"%s",argv[8]);
+	sprintf(fifoname,"%s.txt",argv[8]);
 
-	fifo_handler = open(fifoname,O_WRONLY);
+	fifo_handler = open(fifoname,O_WRONLY | O_CREAT, 0666);
 	std::cout<<"fifo_handler: "<<fifo_handler<<"\n";
 
 	int memberSize, msgSize;

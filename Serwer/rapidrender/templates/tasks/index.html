@@ -1,32 +1,53 @@
-Lista zadan:<br>
+{% extends "base_generic_rapid.html" %}
 
-<ul>
-{% for task in tasks %}
-  <li><b> {{ task.id }} </b>
-    <ul>
-      <li>Depth: <b> {{ task.depth }} </b></li>
-      <li>X: <b> {{ task.x }} </b></li>
-      <li>Y: <b> {{ task.y }} </b></li>
-      <li>Task per thread: <b> {{ task.taskPerThread }} </b></li>
-      <li>Color: 
-        <div style="width: 50px; height; color: {{ task.make_rgb }}"> 
-        </div></li>
-      <li>Owner: <b> {{ task.user.username }} </b></li>
-      <li>Status: <b> {{ task.status }} </b></li>
-      <br>
-      <li>Registration Time: <b> {{ task.registration_time }} </b></li>
-      <li>Start Time: <b> {{ task.start_time }} </b></li>
-      <li>Finish Time: <b> {{ task.finish_time }} </b></li>
-    </ul>
-  </li>
-  <br>
-  <a href="{% url 'detail' task.id %}">Show</a> | 
-  <a href="{% url 'delete' task.id %}">Delete</a>
-{% endfor %}
-</ul>
-<hr>
-You are logged as {{ current_user.username }}<br>
-<a href="{%url 'logout' %}">Logout</a>
-<br>
-<br>
-<a href="{%url 'new' %}">New Task</a>
+{% block menu %}
+<li><a href="/">Home</a></li>
+<li class="active"><a href="/tasks">Lista zadań</a></li>
+<li><a href="/tasks/new"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span> Nowe zadanie</a></li>
+
+{% endblock %}
+
+{% block content %}
+    <div class="row">       
+
+			{% for task in tasks %}
+			
+			<div class="col-xs-4">
+			
+			<div class="panel panel-default">
+				<!-- Default panel contents -->
+				<div class="panel-heading"><h4>Zadanie {{ task.id }}</h4></div>
+
+				<!-- Table -->
+				<table class="table">
+					<tr><td>Głębokość</td><td>{{ task.depth }}</td></tr>
+					<tr><td>X</td><td>{{ task.x }}</td></tr>
+					<tr><td>Y</td><td>{{ task.y }}</td></tr>
+					<tr><td>Zadań na wątek</td><td>{{ task.taskPerThread }}</td></tr>
+					<tr><td>Kolor</td><td style="background-color: rgb( {{task.colorR}}, {{task.colorG}}, {{task.colorB}})"></td></tr>
+					<tr><td>Właściciel</td><td>{{ task.user.username }}</td></tr>
+					<tr><td>Status</td><td>{{ task.status }}</td></tr>
+					<tr><td>Data rejestracji</td><td>{{ task.registration_time }}</td></tr>
+					<tr><td>Data rozpoczęcia</td><td>{{ task.start_time }}</td></tr>
+					<tr><td>Data zakończenia</td><td>{{ task.finish_time }}</td></tr>
+					<tr><td></td><td></td></tr>
+				</table>		
+				
+				<div class="panel-footer">
+					<a class="btn btn-primary" href="{% url 'detail' task.id %}">Pokaż</a>
+					<a class="btn btn-warning" href="{% url 'delete' task.id %}">Usuń</a>
+				</div>				
+			</div>
+
+			</div>
+			
+			{% endfor %}
+			
+			{% if tasks|length < 1 %}
+		
+				<h3>Brak zadań</h3>
+		
+			{% endif %}
+        
+    </div>
+{% endblock %}

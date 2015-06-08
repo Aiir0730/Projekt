@@ -1,2 +1,26 @@
-<h1>Error message:</h1><br>
-<h2>{{ error }}</h2>
+{% extends "base_generic.html" %}
+
+{% block menu %}
+<li><a href="/">Home</a></li>
+<li><a href="/users/login">Logowanie</a></li>
+<li><a href="/users/register">Rejestracja</a></li>
+{% endblock %}
+
+{% block content %}
+    <div class="row">
+    
+		<div class="col-xs-4 col-xs-offset-4">
+			
+			<div class="panel panel-danger">
+				<div class="panel-heading">
+					<span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+					Błąd!
+				</div>
+				<div class="panel-body">
+					{{ error }} 
+				</div>			  
+			</div>
+					
+		</div>
+    </div>
+{% endblock %}
