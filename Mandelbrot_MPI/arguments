@@ -11,3 +11,5 @@
 [arg10] - float - część rzeczywista liczby zespolonej do Julii
 [arg11] - float - część urojona liczby zespolonej do Julii
 	arg10 i arg11 są wymagane nawet jeśli robimy mandelbrota
+[arg12] - int - liczba klatek animacji do wygenerowania
+[arg13] - float - szybkość zoomowania - liczba z przedzialu [0, 1] reprezentująca % przybliżenia między klatkami
