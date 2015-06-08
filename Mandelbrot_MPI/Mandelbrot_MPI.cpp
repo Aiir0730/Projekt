@@ -22,7 +22,7 @@ int worldRank;
 int main(int argc, char *argv[])	// argv: depth, taskPerThread, x, y, colorR, colorG, colorB
 {
 	// parametry generowanego fraktala zostan¹ przekazane przez kolejne argumenty wywo³ania
-	if (argc != 12) 
+	if (argc != 14) 
 	{
 		printf("za malo argumentow\n");
 		return -1;
@@ -30,8 +30,8 @@ int main(int argc, char *argv[])	// argv: depth, taskPerThread, x, y, colorR, co
 	}
 	int worldSize, worldRank;
 	MPI_Init(&argc, &argv);
-    	MPI_Comm_size(MPI_COMM_WORLD, &worldSize);
-    	MPI_Comm_rank(MPI_COMM_WORLD, &worldRank);
+	MPI_Comm_size(MPI_COMM_WORLD, &worldSize);
+	MPI_Comm_rank(MPI_COMM_WORLD, &worldRank);
 
 	//std::cout<<"worldSize MPI: "<<worldSize<<"\n";
 
