@@ -1,0 +1,11 @@
+[arg1] - int - głębokość obliczania zbiezności ciągów
+[arg2] - int - rozdzielczość - x
+[arg3] - int - rozdzielczość - y
+[arg4] - int - rozdzielczość - color r (0 - 255)
+[arg5] - int - rozdzielczość - color g (0 - 255)
+[arg6] - int - rozdzielczość - color b (0 - 255)
+[arg7] - string - id zadania, taki jak będzie wynikowy plik z obrazkiem *.bmp
+[arg8] - int - wybór fraktala: 1 - mandelbrot, 2 - julia
+[arg9] - float - część rzeczywista liczby zespolonej do julii
+[arg10] - float - część urojona liczby zespolonej do julii
+	arg9 i arg10 są wymagane nawet jeśli robimy mandelbrota
