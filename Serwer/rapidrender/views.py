@@ -140,10 +140,10 @@ def start(request, task_id):
   arg14 = str(task.frames)
   arg15 = str(task.speed)
 
-  print("Debug %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s ",
-    (filename, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg_id, arg11, arg12, arg13, arg14, arg15))
+  #print("Debug %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s ",
+  #  (filename, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg_id, arg11, arg12, arg13, arg14, arg15))
 
-  subprocess.call([filename, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg_id, arg11, arg12, arg13, arg14, arg15]) 
+  subprocess.Popen([filename, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg_id, arg11, arg12, arg13, arg14, arg15]) 
   #logger = logging.getLogger(__name__)
   #logger.error(filename)
 
@@ -201,7 +201,7 @@ def __color_to_html(task):
   return "#" + hex(value)[2:]
 
 def copy_animation(frames, task_id, dirname):
-  n = int(log10(frames))+1
+  n = int(log10(2*frames))+1
   for i in range(frames):
     path = dirname + '/../' + task_id + '_' + str(i) + '.bmp'
     destpath = dirname + '/../static/img/' + task_id + '_' + str(i).zfill(n) + '.bmp'
