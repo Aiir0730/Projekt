@@ -2,7 +2,7 @@
 
 	clear
 	make
-	var=" mpirun -n 4 ./mpi 100 30 500 500 255 100 255 haszkod 2 -0.1 0.651 20 0.1" 
+	var=" mpirun -n 4 ./mpi 100 30 500 500 255 100 255 haszkod 2 -0.1 0.651 1 0.1" 
 	
 	echo $var
 	$var

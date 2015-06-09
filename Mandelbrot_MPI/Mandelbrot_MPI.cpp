@@ -42,13 +42,18 @@ int main(int argc, char *argv[])	// argv: depth, taskPerThread, x, y, colorR, co
 		start = std::chrono::system_clock::now();
 		master(argc, argv, worldSize);
 		end = std::chrono::system_clock::now();
-		std::chrono::duration<double> elapsed_seconds = end - start;
-		std::fstream fout;
+		std::chrono::duration<double> elapsed_time = end - start;
+		std::fstream fout_time;
+		std::fstream fout_log;
 		char buf[50];
-		sprintf(buf, "%s%s", "id_", argv[8]); 
-		fout.open(buf, std::fstream::in | std::fstream::out | std::fstream::app);
-		fout << " ";
-		fout.close();
+		sprintf(buf, "%s%s", argv[8], "_time"); 
+		fout_time.open(buf, std::fstream::out);
+		fout_time << elapsed_time.count();
+		fout_time.close();
+		
+		fout_log.open("log", std::fstream::out | std::fstream::app);
+		fout_log << worldSize << " " << argv[2] << " " << argv[3] << " " << argv[4] << " " << argv[9] << " " << argv[12] << std::endl;
+		fout_log.close();
 	}
 	else
 	{
