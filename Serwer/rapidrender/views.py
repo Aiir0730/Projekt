@@ -109,8 +109,11 @@ def start(request, task_id):
   arg9 = str(task.colorG)
   arg10 = str(task.colorB)
   arg_id = str(task_id)
+  arg11 = str(1)   #todo formularz
+  arg12 = str(-0.1)  #todo
+  arg13 = str(0.651) #no
 
-  subprocess.call([filename, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg_id]) 
+  subprocess.call([filename, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg_id, arg11, arg12, arg13]) 
   #logger = logging.getLogger(__name__)
   #logger.error(filename)
 
