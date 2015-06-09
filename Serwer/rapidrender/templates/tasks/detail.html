@@ -66,7 +66,8 @@
 				</div>
         {% if task.status == 'Finished' %}
           <div class="panel-footer">
-            <a href="/home/robikos/AIIR/Serwer/static/img/{{task.id}}.bmp"><img src="/home/robikos/AIIR/Serwer/static/img/{{task.id}}.bmp" /></a>
+            <a href="{% static 'img/' %}{{ task.id }}.bmp">
+            <img src="{% static 'img/' %}{{ task.id }}.bmp" width=200 height=200 /></a>
           </div>
         {% endif %}				
 			</div>

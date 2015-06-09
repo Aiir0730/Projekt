@@ -1,0 +1,15 @@
+500 30 1500 1000 255 100 255 haszkod 2 -0.1 0.651" 
+[arg1] - int - głębokość obliczania zbiezności ciągów
+[arg2] - int - stopien rozdrobnienia zadań, 
+[arg3] - int - rozdzielczość - x
+[arg4] - int - rozdzielczość - y
+[arg5] - int - rozdzielczość - color r (0 - 255)
+[arg6] - int - rozdzielczość - color g (0 - 255)
+[arg7] - int - rozdzielczość - color b (0 - 255)
+[arg8] - string - id zadania, taki jak będzie wynikowy plik z obrazkiem *.bmp
+[arg9] - int - wybór fraktala: 1 - Mandelbrot, 2 - Julia
+[arg10] - float - część rzeczywista liczby zespolonej do Julii
+[arg11] - float - część urojona liczby zespolonej do Julii
+	arg10 i arg11 są wymagane nawet jeśli robimy mandelbrota
+[arg12] - int - liczba klatek animacji do wygenerowania
+[arg13] - float - szybkość zoomowania - liczba z przedzialu [0, 1] reprezentująca % przybliżenia między klatkami

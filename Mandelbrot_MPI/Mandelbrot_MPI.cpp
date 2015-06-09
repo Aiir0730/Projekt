@@ -24,7 +24,7 @@ std::chrono::time_point<std::chrono::system_clock> start, end;
 int main(int argc, char *argv[])	// argv: depth, taskPerThread, x, y, colorR, colorG, colorB
 {
 	// parametry generowanego fraktala zostan¹ przekazane przez kolejne argumenty wywo³ania
-	if (argc != 12) 
+	if (argc != 14) 
 	{
 		printf("za malo argumentow\n");
 		return -1;

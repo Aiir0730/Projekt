@@ -11,6 +11,7 @@ struct master2Slave
 	unsigned char colorR;
 	unsigned char colorG;
 	unsigned char colorB;
+	int frameNumber;
 };
 
 struct slave2Master

@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from rapidrender.models import Task
 from django.contrib.auth.models import User
+import Serwer.middlewares
 
 from django.utils import timezone
 from django.http import HttpResponseRedirect, HttpResponse
@@ -93,16 +94,7 @@ def delete(request, task_id):
 def start(request, task_id):
   task = Task.objects.get(id=task_id)
 
-  #fifo create
-  path = os.path.dirname(os.path.realpath(__file__)) + '/../../Mandelbrot_MPI/' + task_id + '.txt'
-  #os.mkfifo(path)
-  #create file
-  #file = os.fdopen(os.open(path, os.O_WRONLY | os.O_CREAT, 0o666), 'w')
-  #file = open(path, 'w')
-  #os.chmod(path, 0o666)
-  #logger = logging.getLogger(__name__)
-  #logger.error(file)
-  #file.close()
+  Serwer.middlewares.SocketMiddleware.statushash[task_id] = (0,0)
 
   mpipath = os.path.dirname(os.path.realpath(__file__)) + '/../../Mandelbrot_MPI/mpi'
   filename = 'mpirun'
@@ -117,8 +109,11 @@ def start(request, task_id):
   arg9 = str(task.colorG)
   arg10 = str(task.colorB)
   arg_id = str(task_id)
+  arg11 = str(1)   #todo formularz
+  arg12 = str(-0.1)  #todo
+  arg13 = str(0.651) #no
 
-  subprocess.call([filename, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg_id]) 
+  subprocess.call([filename, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg_id, arg11, arg12, arg13]) 
   #logger = logging.getLogger(__name__)
   #logger.error(filename)
 
@@ -129,11 +124,14 @@ def start(request, task_id):
   return HttpResponseRedirect(reverse('detail', args=(task.id,)))
 
 def status(request, task_id):
-  path = os.path.dirname(os.path.realpath(__file__)) + '/../../Mandelbrot_MPI/' + task_id + '.txt'
-  fifo = open(path, 'r+')
-  info = fifo.read()
+
+
+  info = Serwer.middlewares.SocketMiddleware.statushash[task_id]
+  #path = os.path.dirname(os.path.realpath(__file__)) + '/../../Mandelbrot_MPI/' + task_id + '.txt'
+  #fifo = open(path, 'r+')
+  #info = fifo.read()
   #fifo.write(info)
-  fifo.close()
+  #fifo.close()
 
   return HttpResponse(info, content_type='text/plain')
 
@@ -143,8 +141,8 @@ def finish(request, task_id):
   task.status = "Finished"
   task.save()
 
-  path = os.path.dirname(os.path.realpath(__file__)) + '/../../Mandelbrot_MPI/' + task_id + '.txt'
-  os.remove(path) #remove fifo
+  #path = os.path.dirname(os.path.realpath(__file__)) + '/../../Mandelbrot_MPI/' + task_id + '.txt'
+  #os.remove(path) #remove fifo
 
   #copy imagefile to statics
 
