@@ -35,7 +35,6 @@
 			  <input type="color" class="form-control" name="color" id="color" />
 			</div>
 			<div class="form-group">
-			  <label for="fractal_type">Typ:</label>
 			  <label class="radio-inline">
 			  <input type="radio" name="fractal_type" id="fractal_type" value="1"> Mandelbrot
 			</label>
