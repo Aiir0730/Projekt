@@ -13,6 +13,13 @@ class Task(models.Model):
   colorG = models.PositiveSmallIntegerField()
   colorB = models.PositiveSmallIntegerField()
 
+  #nowe
+  fractal_type = models.PositiveSmallIntegerField()
+  re = models.TextField()
+  im = models.TextField()
+  frames = models.PositiveSmallIntegerField()
+  speed = models.TextField()
+
   #task management fields
   registration_time = models.DateTimeField()
   start_time = models.DateTimeField()

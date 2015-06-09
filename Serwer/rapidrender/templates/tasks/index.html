@@ -25,6 +25,13 @@
 					<tr><td>Y</td><td>{{ task.y }}</td></tr>
 					<tr><td>Zadań na wątek</td><td>{{ task.taskPerThread }}</td></tr>
 					<tr><td>Kolor</td><td style="background-color: rgb( {{task.colorR}}, {{task.colorG}}, {{task.colorB}})"></td></tr>
+					<tr><td>Typ (1 - Mandelbrot, 2 - Julia )</td><td>{{ task.fractal_type }}</td></tr>
+					<tr><td>Część rzeczywista:</td><td>{{ task.re }}</td></tr>
+					<tr><td>Część urojona:</td><td>{{ task.im }}</td></tr>
+					<tr><td>Część rzeczywista:</td><td>{{ task.re }}</td></tr>
+					<tr><td>Liczba klatek animacji:</td><td>{{ task.frames }}</td></tr>
+					<tr><td>FPS:</td><td>{{ task.speed }}</td></tr>
+
 					<tr><td>Właściciel</td><td>{{ task.user.username }}</td></tr>
 					<tr><td>Status</td><td>{{ task.status }}</td></tr>
 					<tr><td>Data rejestracji</td><td>{{ task.registration_time }}</td></tr>

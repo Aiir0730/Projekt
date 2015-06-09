@@ -1,5 +1,7 @@
 __pycache__/
 Serwer/Serwer/settings.py
+Serwer/static/img/
+Serwer/static/output/
 
 =============
 Visual Studio

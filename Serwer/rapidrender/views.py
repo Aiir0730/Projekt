@@ -11,6 +11,10 @@ from django.contrib.auth.decorators import login_required
 import subprocess
 import os
 import logging
+import shutil
+from math import log10
+#from scitools.std import movie
+#from PIL import Image, ImageSequence
 
 # Create your views here.
 # Like Task controller
@@ -26,11 +30,21 @@ def detail(request, task_id):
 
   path = os.path.dirname(os.path.realpath(__file__)) + '/../' + task_id + '.bmp'
   destpath = os.path.dirname(os.path.realpath(__file__)) + '/../static/img/' + task_id + '.bmp'
-  if task.status == 'At work' and os.path.isfile(path):
+
+  animation_path = os.path.dirname(os.path.realpath(__file__)) + '/../' + task_id + '_' + str(task.frames-1) + '.bmp'
+
+  if task.status == 'At work' and task.frames == 1 and os.path.isfile(path):
     os.rename(path, destpath)
     task.status = "Finished"
     task.finish_time = timezone.now()
     task.save()
+
+  elif task.status == 'At work' and task.frames > 1 and os.path.isfile(animation_path):
+    copy_animation(task.frames, task_id, os.path.dirname(os.path.realpath(__file__)))
+    #movie(task_id+'_*.bmp',fps=23,output_file=task_id+'.gif')
+    task.status = "Finished"
+    task.finish_time = timezone.now()
+    task.save()    
 
   return render(request, 'tasks/detail.html', {'task': task})
 
@@ -54,6 +68,11 @@ def create(request):
                  finish_time = timezone.now(),
                  status = "Registered",
                  user_id = request.user.id,
+                 fractal_type = request.POST['fractal_type'],
+                 re = request.POST['re'],
+                 im = request.POST['im'],
+                 frames = request.POST['frames'],
+                 speed = request.POST['speed'],
                  )
 
   newtask.save()
@@ -75,6 +94,12 @@ def update(request, task_id):
     task.colorR = color['r']
     task.colorG = color['g']
     task.colorB = color['b']
+    task.fractal_type = request.POST['fractal_type'],
+    task.re = request.POST['re'],
+    task.im = request.POST['im'],
+    task.frames = request.POST['frames'],
+    task.speed = request.POST['speed'],
+
     task.registration_time = timezone.now()
     task.start_time = timezone.now()
     task.finish_time = timezone.now()
@@ -109,11 +134,16 @@ def start(request, task_id):
   arg9 = str(task.colorG)
   arg10 = str(task.colorB)
   arg_id = str(task_id)
-  arg11 = str(1)   #todo formularz
-  arg12 = str(-0.1)  #todo
-  arg13 = str(0.651) #no
+  arg11 = str(task.fractal_type) #typ fraktala   
+  arg12 = task.re
+  arg13 = task.im
+  arg14 = str(task.frames)
+  arg15 = str(task.speed)
 
-  subprocess.call([filename, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg_id, arg11, arg12, arg13]) 
+  print("Debug %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s ",
+    (filename, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg_id, arg11, arg12, arg13, arg14, arg15))
+
+  subprocess.call([filename, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg_id, arg11, arg12, arg13, arg14, arg15]) 
   #logger = logging.getLogger(__name__)
   #logger.error(filename)
 
@@ -169,3 +199,19 @@ def __color_helper(html_color):
 def __color_to_html(task):
   value = (task.colorR << 16) | (task.colorG << 8) | task.colorB;
   return "#" + hex(value)[2:]
+
+def copy_animation(frames, task_id, dirname):
+  n = int(log10(frames))+1
+  for i in range(frames):
+    path = dirname + '/../' + task_id + '_' + str(i) + '.bmp'
+    destpath = dirname + '/../static/img/' + task_id + '_' + str(i).zfill(n) + '.bmp'
+    returnpath = dirname + '/../static/img/' + task_id + '_' + str(2*frames - i - 1).zfill(n) + '.bmp'
+    os.rename(path, destpath)
+    shutil.copyfile(destpath, returnpath)
+
+
+  srcpath = dirname + '/../static/img/'+task_id+'_*.bmp'
+  avipath = dirname + '/../static/output/avi'+task_id+'.avi'
+  gifpath = dirname + '/../static/output/gif'+task_id+'.gif'
+  os.system('mencoder "mf://'+srcpath+'" -mf type=bmp:fps=23 -ovc lavc -o '+avipath+' -lavcopts vcodec=mpeg4')
+  os.system('mplayer "mf://'+srcpath+'" -mf w=2000:h=2000:type=bmp -vf scale=500:500 -vo gif89a:fps=23:output='+gifpath)
