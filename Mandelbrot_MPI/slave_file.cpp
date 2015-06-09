@@ -13,12 +13,12 @@ void packSlave();
 void unpackSlave();
 void doMath(int x0, int y0, int depth);
 
-float MIN_X = -3.0f;
-float MAX_X = 3.0f;
-float MIN_Y = -3.0f;
-float MAX_Y = 3.0f;
-float ZOOM_PLUS = 0.3f;
-float ZOOM_MINUS = 0.3f;
+float MIN_X = -2.5f;
+float MAX_X = 2.5f;
+float MIN_Y = -2.5f;
+float MAX_Y = 2.5f;
+float ZOOM_PLUS = 0.01f;
+float ZOOM_MINUS = 0.01f;
 
 int fraktal;
 int temp;
@@ -37,7 +37,7 @@ int slave(int argc, char* argv[], int worldSize)
     	int y0, x0;
 	//std::cout << "Slave argc: "<< argc << " argv[0]: " << argv[0] << "\n";
 
-	if (argc != 12) return -1;
+	if (argc != 14) return -1;
 	int taskPerThread = atoi(argv[2]);
 	packageMaster2Slave.x = atoi(argv[3]);
 	x0 = atoi(argv[3]);
@@ -48,7 +48,7 @@ int slave(int argc, char* argv[], int worldSize)
 		return -1;
 	cx = atof(argv[10]);
 	cy = atof(argv[11]);
-
+	ZOOM_MINUS = atof(argv[13]);
 
 	
 	float XX = MAX_X - MIN_X;
@@ -106,7 +106,7 @@ int slave(int argc, char* argv[], int worldSize)
 	//------------------
 	//----  okreœlenie potrzebnego rozmiaru bufora na komunikat master2Slave
 		
-	MPI_Pack_size(5, MPI_INT, MPI_COMM_WORLD, &memberSize);
+	MPI_Pack_size(6, MPI_INT, MPI_COMM_WORLD, &memberSize);
 	master2SlaveSize = memberSize; // master
 	MPI_Pack_size(3, MPI_CHAR, MPI_COMM_WORLD, &memberSize);
 	master2SlaveSize += memberSize;
@@ -120,14 +120,17 @@ int slave(int argc, char* argv[], int worldSize)
 	slave2MasterSize += memberSize;
 	buffSend = (char*)malloc(slave2MasterSize);
 	
+	int prevNumOfFrame = 0;
 	for (;;)
 	{
+
 		////std::cout<<"	SLAVE - wait for receive\n";
 		MPI_Recv(buffRecv, master2SlaveSize, MPI_PACKED, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
 		
 		////std::cout<<"	SLAVE -	received MPI_TAG: "<<status.MPI_TAG<<"\n";
 		if (status.MPI_TAG == DIETAG)
 			return 0;
+
 
 		position = 0;
 		MPI_Unpack(buffRecv, master2SlaveSize, &position, &packageMaster2Slave.jobID, 1, MPI_INT, MPI_COMM_WORLD);
@@ -138,11 +141,24 @@ int slave(int argc, char* argv[], int worldSize)
 		MPI_Unpack(buffRecv, master2SlaveSize, &position, &packageMaster2Slave.colorR, 1, MPI_UNSIGNED_CHAR, MPI_COMM_WORLD);
 		MPI_Unpack(buffRecv, master2SlaveSize, &position, &packageMaster2Slave.colorG, 1, MPI_UNSIGNED_CHAR, MPI_COMM_WORLD);
 		MPI_Unpack(buffRecv, master2SlaveSize, &position, &packageMaster2Slave.colorB, 1, MPI_UNSIGNED_CHAR, MPI_COMM_WORLD);
+		MPI_Unpack(buffRecv, master2SlaveSize, &position, &packageMaster2Slave.frameNumber, 1, MPI_INT, MPI_COMM_WORLD);
+
+		if (packageMaster2Slave.frameNumber != prevNumOfFrame)
+		{
+			prevNumOfFrame = packageMaster2Slave.frameNumber;
+			MIN_Y -= ZOOM_MINUS*MIN_Y;
+			MIN_X -= ZOOM_MINUS*MIN_X;
+			MAX_Y -= ZOOM_MINUS*MAX_Y;
+			MAX_X -= ZOOM_MINUS*MAX_X;
+			std::cout<<"SLAVE - next frame: "<<prevNumOfFrame<<"\n";
+		}
 
 		////std::cout<<"	SLAVE -	doMath()\n";
 		// for pixels to calculate -> calculate
 		doMath(x0, y0, packageMaster2Slave.depth);
+
 		
+
 		packageSlave2Master.jobID = packageMaster2Slave.jobID;
 		packageSlave2Master.ymin = packageMaster2Slave.ymin;
 		packageSlave2Master.ymax = packageMaster2Slave.ymax;		
@@ -162,6 +178,7 @@ int slave(int argc, char* argv[], int worldSize)
 		////std::cout<<"	SLAVE -	ready to send\n";
 		MPI_Send(buffSend, position, MPI_PACKED, 0, WORKTAG, MPI_COMM_WORLD);
 		////std::cout<<"	SLAVE -	sent\n";
+
 	}
 
 }
