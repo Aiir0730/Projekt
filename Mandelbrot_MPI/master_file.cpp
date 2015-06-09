@@ -20,7 +20,7 @@ const int PORT = 9999;
 
 struct msgt
 {
-	int task_id;
+	char task_id[50];
 	int progress;
 	bool is_done;
 };
@@ -73,7 +73,7 @@ int master(int argc, char** argv, int worldSize)
 	image = bitmap_image(packageMaster2Slave.x, y0);
 	char filename[50];
 	sprintf(filename,"%s.bmp", argv[8]);
-
+	sprintf(msg.task_id,"%s",argv[8]);
 	int memberSize, msgSize;
 	int master2SlaveSize = 0;
 	int slave2MasterSize = 0;
@@ -223,13 +223,13 @@ void doNiceStuff(int x0, int y0, int ymin, int ymax)
 		}
 	}
 	++done_tasks;
-	msg.task_id = done_tasks;
+	//msg.task_id = argv[8];
 	msg.progress = (done_tasks * 100)/(numOfFrames * numOfTasks);
 	if (done_tasks == numOfTasks) msg.is_done = true;
 	else msg.is_done = false;
 
 	// char message[20];//moje
-	// sprintf(message, "%d:%d:%d", msg.task_id, msg.progress, msg.is_done);//moje
+	// sprintf(message, "%s:%d:%d", msg.task_id, msg.progress, msg.is_done);//moje
 	// //snd = sendto(s, &msg, blen, 0,(struct sockaddr *) &adr_serw, (socklen_t) slen);
 	// snd = sendto(s, message, strlen(message), 0, (struct sockaddr*) &adr_serw, (socklen_t) slen);
 	// if(snd < 0) blad("sendto()"); 
