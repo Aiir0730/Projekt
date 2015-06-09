@@ -52,7 +52,7 @@ int main(int argc, char *argv[])	// argv: depth, taskPerThread, x, y, colorR, co
 		fout_time.close();
 		
 		fout_log.open("log", std::fstream::out | std::fstream::app);
-		fout_log << worldSize << " " << argv[2] << " " << argv[3] << " " << argv[4] << " " << argv[9] << " " << argv[12] << std::endl;
+		fout_log << worldSize << " " << argv[2] << " " << argv[3] << " " << argv[4] << " " << argv[9] << " " << argv[12] << " " << elapsed_time.count() << std::endl;
 		fout_log.close();
 	}
 	else

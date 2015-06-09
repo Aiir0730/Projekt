@@ -20,7 +20,7 @@ const int PORT = 9999;
 
 struct msgt
 {
-	int task_id;
+	char task_id[50];
 	int progress;
 	bool is_done;
 };
@@ -223,7 +223,7 @@ void doNiceStuff(int x0, int y0, int ymin, int ymax)
 		}
 	}
 	++done_tasks;
-	msg.task_id = done_tasks;
+	msg.task_id = argv[8];
 	msg.progress = (done_tasks * 100)/(numOfFrames * numOfTasks);
 	if (done_tasks == numOfTasks) msg.is_done = true;
 	else msg.is_done = false;
