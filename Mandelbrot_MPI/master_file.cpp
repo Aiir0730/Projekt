@@ -48,8 +48,13 @@ void blad(char *s);
 
 int master(int argc, char** argv, int worldSize)
 {
+
 	// s = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 	// if(s < 0) blad("socket"); 
+
+	//s = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	//if(s < 0) blad("socket"); 
+
 	// printf("Gniazdko %d utworzone\n", s); 
 	// memset((char *) &adr_serw, 0, sizeof(adr_serw)); 
 	// adr_serw.sin_family = AF_INET; 
@@ -60,6 +65,7 @@ int master(int argc, char** argv, int worldSize)
 	// 	_exit(1); 
 	// }
 
+
 	// Socket to talk to clients
 	
 	context = zmq_ctx_new ();
@@ -67,8 +73,6 @@ int master(int argc, char** argv, int worldSize)
 	int rc = zmq_bind (responder, "tcp://*:9999");
 	assert (rc == 0);
 	 
-
-
 
     int y0, x0;
 
@@ -243,12 +247,14 @@ void doNiceStuff(int x0, int y0, int ymin, int ymax)
 	if (done_tasks == numOfTasks) msg.is_done = true;
 	else msg.is_done = false;
 
+
 	char message[20];//moje
 	sprintf(message, "%s:%d:%d", msg.task_id, msg.progress, msg.is_done);//moje
 	zmq_send (responder, message, 20, 0);
 	//snd = sendto(s, &msg, blen, 0,(struct sockaddr *) &adr_serw, (socklen_t) slen);
 	//snd = sendto(s, message, strlen(message), 0, (struct sockaddr*) &adr_serw, (socklen_t) slen);
 	if(snd < 0) blad("sendto()"); 
+
 }
  
 void blad(char *s)

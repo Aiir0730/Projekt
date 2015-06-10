@@ -13,6 +13,12 @@ import os
 import logging
 import shutil
 from math import log10
+
+import zmq
+import time
+import sys
+from  multiprocessing import Process
+
 #from scitools.std import movie
 #from PIL import Image, ImageSequence
 
@@ -121,10 +127,14 @@ def start(request, task_id):
 
   Serwer.middlewares.SocketMiddleware.statushash[task_id] = (0,0)
 
-  mpipath = os.path.dirname(os.path.realpath(__file__)) + '/../../Mandelbrot_MPI/mpi'
+  #mpipath = os.path.dirname(os.path.realpath(__file__)) + '/../../Mandelbrot_MPI/mpi'
+  mpipath = '/mpi/mpi'
   filename = 'mpirun'
-  arg1 = '-n'
-  arg2 = '5'
+  arg1 = '-f'
+  #arg2 = os.path.dirname(os.path.realpath(__file__)) + '/../../Mandelbrot_MPI/hostfile'
+  arg2 = '/mpi/hostfile'
+  #arg1 = '-n'
+  #arg2 = '5'
   arg3 = str(mpipath)
   arg4 = str(task.depth)
   arg5 = str(task.taskPerThread)
@@ -143,7 +153,12 @@ def start(request, task_id):
   #print("Debug %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s ",
   #  (filename, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg_id, arg11, arg12, arg13, arg14, arg15))
 
+  #server_port = 9999
+  #Process(target=server, args=(server_port,)).start()
+
+  print("Przed")
   subprocess.Popen([filename, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg_id, arg11, arg12, arg13, arg14, arg15]) 
+  print("PO")
   #logger = logging.getLogger(__name__)
   #logger.error(filename)
 
@@ -215,3 +230,18 @@ def copy_animation(frames, task_id, dirname):
   gifpath = dirname + '/../static/output/gif'+task_id+'.gif'
   os.system('mencoder "mf://'+srcpath+'" -mf type=bmp:fps=23 -ovc lavc -o '+avipath+' -lavcopts vcodec=mpeg4')
   os.system('mplayer "mf://'+srcpath+'" -mf w=2000:h=2000:type=bmp -vf scale=500:500 -vo gif89a:fps=23:output='+gifpath)
+
+def server(port="9999"):
+    context = zmq.Context()
+    socket = context.socket(zmq.REP)
+    socket.bind("tcp://*:%s" % port)
+    print("Running server on port: ", port)
+    # serves only 5 request and dies
+    while True:
+        # Wait for next request from client
+        message = socket.recv()
+        (task_id, progress, done) = message.split(":")
+        print("Received request #%s: %s" % (reqnum, message))
+        #socket.send("World from %s" % port)
+        if done == '1':
+          break;
