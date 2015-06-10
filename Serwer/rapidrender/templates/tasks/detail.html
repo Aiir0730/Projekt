@@ -4,19 +4,30 @@
 
 {% if task.status == 'At work' %}
   <script type="text/javascript"> 
-    var progress_bar = document.getElementById("progress_var");
+//     function update(){
+//       $.get("{% url 'status' task.id %}", function(status){
+//         // KOd aktualizacji progress baru 
+//     });
+// });
+//     }
 
-    setTimeout(function() {
-         $.ajax({ url: "localhost:8000/tasks/{{task.id}}/status/", success: function(data) {
-              console.log(data.value);
-              if (data.value == "-1")
-              {
-                document.location.href = "localhost:8000/tasks/{{task.id}}/finish/";
-              }
 
-              progress_bar.innerHTML=data.value;
-         }, dataType: "text", complete: poll });
-      }, 30);
+(function poll() {
+    $.ajax({
+        url: "{% url 'status' task.id %}",
+        type: "GET",
+        success: function(data) {
+          var percent =  data.split(":");
+          var bar = $(".progress-bar");
+          bar.css("width", percent[1]+"%");
+        },
+        dataType: "text",
+        complete: setTimeout(function() {poll()}, 5000),
+        timeout: 2000
+    })
+})();
+
+
   </script>
 {% endif %}
 
@@ -59,7 +70,12 @@
 					<tr><td>Data rejestracji</td><td>{{ task.registration_time }}</td></tr>
 					<tr><td>Data rozpoczęcia</td><td>{{ task.start_time }}</td></tr>
 					<tr><td>Data zakończenia</td><td>{{ task.finish_time }}</td></tr>
-					<tr><td></td><td></td></tr>
+					<tr><td> <div class="progress">
+                    <div class="progress-bar" role="progressbar" aria-valuenow="70"
+                             aria-valuemin="0" aria-valuemax="100" style="width:70%">
+                         <span class="sr-only">70% Complete</span>
+                      </div>
+                        </div></td></tr>
 				</table>		
 				
 				<div class="panel-footer">
