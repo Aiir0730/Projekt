@@ -13,6 +13,8 @@
 #include <sys/socket.h> 
 #include <string.h>
 #include <arpa/inet.h>
+#include <zmq.h>
+#include <assert.h>
 
 const int KROKI = 10;
 const int PORT = 9999;
@@ -24,6 +26,9 @@ struct msgt
 	int progress;
 	bool is_done;
 };
+
+void *context;
+void *responder;
 
 int numOfTasks;
 int numOfFrames;
@@ -43,17 +48,27 @@ void blad(char *s);
 
 int master(int argc, char** argv, int worldSize)
 {
-	s = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-	if(s < 0) blad("socket"); 
-	printf("Gniazdko %d utworzone\n", s); 
-	memset((char *) &adr_serw, 0, sizeof(adr_serw)); 
-	adr_serw.sin_family = AF_INET; 
-	adr_serw.sin_port = htons(PORT); 
-	if (inet_aton(SRV_IP, &adr_serw.sin_addr) == 0)	// Tu zmienione z argv[1] na SRV_IP
-	{ 
-		fprintf(stderr, "inet_aton() failed\n"); 
-		_exit(1); 
-	}
+	// s = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+	// if(s < 0) blad("socket"); 
+	// printf("Gniazdko %d utworzone\n", s); 
+	// memset((char *) &adr_serw, 0, sizeof(adr_serw)); 
+	// adr_serw.sin_family = AF_INET; 
+	// adr_serw.sin_port = htons(PORT); 
+	// if (inet_aton(SRV_IP, &adr_serw.sin_addr) == 0)	// Tu zmienione z argv[1] na SRV_IP
+	// { 
+	// 	fprintf(stderr, "inet_aton() failed\n"); 
+	// 	_exit(1); 
+	// }
+
+	// Socket to talk to clients
+	
+	context = zmq_ctx_new ();
+	responder = zmq_socket (context, ZMQ_REP);
+	int rc = zmq_bind (responder, "tcp://*:9999");
+	assert (rc == 0);
+	 
+
+
 
     int y0, x0;
 
@@ -230,8 +245,9 @@ void doNiceStuff(int x0, int y0, int ymin, int ymax)
 
 	char message[20];//moje
 	sprintf(message, "%s:%d:%d", msg.task_id, msg.progress, msg.is_done);//moje
+	zmq_send (responder, message, 20, 0);
 	//snd = sendto(s, &msg, blen, 0,(struct sockaddr *) &adr_serw, (socklen_t) slen);
-	snd = sendto(s, message, strlen(message), 0, (struct sockaddr*) &adr_serw, (socklen_t) slen);
+	//snd = sendto(s, message, strlen(message), 0, (struct sockaddr*) &adr_serw, (socklen_t) slen);
 	if(snd < 0) blad("sendto()"); 
 }
  
